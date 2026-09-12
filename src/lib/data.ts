@@ -23,8 +23,8 @@ export function useData(location:string,start:string,end:string,staff:boolean,re
      allPages<Leave>((a,b)=>db().from('leave_requests').select('*').eq('location_id',location).order('submitted_at',{ascending:false}).order('id').range(a,b)),
      allPages<Rate>((a,b)=>db().from('operator_rates').select('*').eq('location_id',location).order('effective_date',{ascending:false}).order('id').range(a,b)),
     ]);
-    if(!disposed&&n===seq.current){setData({profiles,assignments,slots,submissions,leaves,rates});setError('');}
-   }catch(e){if(!disposed&&n===seq.current){setData(empty);setError(errorText(e));}}
+    if(!disposed&&n===seq.current){const next={profiles,assignments,slots,submissions,leaves,rates};setData(old=>JSON.stringify(old)===JSON.stringify(next)?old:next);setError('');}
+   }catch(e){if(!disposed&&n===seq.current){setError(errorText(e));}}
    finally{running=false;if(!disposed){setLoading(false);if(queued){queued=false;void load();}}}
   };
   const nextScope=[location,start,end,staff].join(':');if(scope.current!==nextScope){setData(empty);setLoading(true);scope.current=nextScope;}setLive(false);void load();

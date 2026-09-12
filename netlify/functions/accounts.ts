@@ -10,8 +10,21 @@ export default async (request: Request) => {
       if (!value) return [];
       try { return [new URL(value).origin]; } catch { return []; }
     });
+  const siteHosts = [process.env.APP_ORIGIN, process.env.URL].flatMap(value => {
+    if (!value) return [];
+    try { return [new URL(value).hostname]; } catch { return []; }
+  });
+  let isSiteDeploy = false;
+  if (requestOrigin) {
+    try {
+      const candidate = new URL(requestOrigin);
+      isSiteDeploy = candidate.protocol === 'https:' && siteHosts.some(host =>
+        host.endsWith('.netlify.app') && (candidate.hostname === host || candidate.hostname.endsWith(`--${host}`))
+      );
+    } catch { isSiteDeploy = false; }
+  }
   if (!url || !anon || !service || !allowedOrigins.length) return response(503, 'Konfigurasi server belum lengkap');
-  if (!requestOrigin || !allowedOrigins.includes(requestOrigin)) return response(403, 'Origin ditolak');
+  if (!requestOrigin || (!allowedOrigins.includes(requestOrigin) && !isSiteDeploy)) return response(403, 'Origin ditolak');
   const authorization = request.headers.get('authorization');
   if (!authorization?.startsWith('Bearer ')) return response(401, 'Login diperlukan');
   const token = authorization.slice(7);

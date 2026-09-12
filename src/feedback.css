@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap');
+:root{font-family:Rubik,Arial,sans-serif}
+.availability-grid .hour.filled{background:var(--purple);border-color:var(--purple);color:white}
+.availability-grid .hour.range-anchor{outline:3px solid #ac70ee;outline-offset:-3px}
+.summary-day{display:block}
+.board,.table-wrap:has(>.availability-grid){max-height:70vh;max-height:70dvh;overflow:auto;position:relative;isolation:isolate;overscroll-behavior:contain}
+.timeline .bands{position:sticky;top:0;height:44px;z-index:4}
+.timeline .bands>*{white-space:nowrap}
+.timeline .header-row{position:sticky;top:44px;z-index:4}
+.availability-grid .header-row{position:sticky;top:0;z-index:4}
+.timeline .hour-row>:first-child,.availability-grid .hour-row>:first-child,.timeline .bands>:first-child{position:sticky;left:0;z-index:2;background:#fafafd}
+.timeline .header-row>:first-child,.availability-grid .header-row>:first-child,.timeline .bands>:first-child{z-index:5}
+.timeline .date-divider strong{position:sticky;left:16px}
+.pool .leave-badge{color:#9a4c13;background:#fff5e8;padding:5px;border-radius:5px}

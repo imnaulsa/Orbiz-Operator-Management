@@ -4,9 +4,14 @@ const response = (status: number, message: string) => new Response(JSON.stringif
 export default async (request: Request) => {
   if (request.method !== 'POST') return response(405, 'Method not allowed');
   const { SUPABASE_URL: url, SUPABASE_ANON_KEY: anon, SUPABASE_SERVICE_ROLE_KEY: service } = process.env;
-  const origin = process.env.CONTEXT === 'deploy-preview' ? process.env.DEPLOY_PRIME_URL : process.env.APP_ORIGIN;
-  if (!url || !anon || !service || !origin) return response(503, 'Konfigurasi server belum lengkap');
-  if (request.headers.get('origin') !== origin) return response(403, 'Origin ditolak');
+  const requestOrigin = request.headers.get('origin');
+  const allowedOrigins = [process.env.APP_ORIGIN, process.env.URL, process.env.DEPLOY_PRIME_URL, process.env.DEPLOY_URL]
+    .flatMap(value => {
+      if (!value) return [];
+      try { return [new URL(value).origin]; } catch { return []; }
+    });
+  if (!url || !anon || !service || !allowedOrigins.length) return response(503, 'Konfigurasi server belum lengkap');
+  if (!requestOrigin || !allowedOrigins.includes(requestOrigin)) return response(403, 'Origin ditolak');
   const authorization = request.headers.get('authorization');
   if (!authorization?.startsWith('Bearer ')) return response(401, 'Login diperlukan');
   const token = authorization.slice(7);
@@ -27,7 +32,7 @@ export default async (request: Request) => {
   if (role === 'staff' && (typeof fee !== 'number' || !Number.isFinite(fee) || fee < 0 || fee > 999999999999 || typeof effective !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(effective) || Number.isNaN(Date.parse(effective)))) return response(400, 'Fee dan effective date wajib');
   if (actor.role !== 'super_admin' && (role !== 'staff' || location !== actor.location_id)) return response(403, 'Hanya staff lokasi sendiri');
   const admin = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: `${origin}/recovery` });
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: `${requestOrigin}/recovery` });
   if (error || !data.user) return response(400, 'Undangan gagal. Periksa alamat email dan status akun di Supabase.');
   // Re-check role/location inside RPC after external Auth operation. Missing profiles always fail closed.
   const { error: profileError } = await client.rpc('manage_account', { p_id: data.user.id, p_name: name.trim(), p_role: role as 'staff' | 'operator_manager' | 'super_admin', p_location: String(location), p_employment: employment as 'internal' | 'mitra', p_active: true, ...(role === 'staff' ? { p_initial_fee: fee as number, p_effective: effective as string } : {}) });

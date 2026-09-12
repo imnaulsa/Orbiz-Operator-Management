@@ -1,0 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap');
+:root{font-family:Rubik,Arial,sans-serif}
+.availability-grid .hour.filled{background:var(--purple);border-color:var(--purple);color:white}
+.availability-grid .hour.range-anchor{outline:3px solid #ac70ee;outline-offset:-3px}
+.summary-day{display:block}
+.pool .leave-badge{color:#9a4c13;background:#fff5e8;padding:5px;border-radius:5px}

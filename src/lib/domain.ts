@@ -28,3 +28,9 @@ export function slotAllowed(operator:string,date:string,hour:number,slots:Slot[]
   const a=Date.parse(date+'T'+hourLabel(hour)+':00+07:00');
   return !leaves.some(l=>l.operator_id===operator&&l.status==='approved'&&Date.parse(l.starts_at)<a+3600000&&Date.parse(l.ends_at)>a);
 }
+
+/** Period containing date; ends on the 20th. Filter only, not a payroll rule. */
+export function logbookPeriod(date:string){
+ const d=new Date(date+'T00:00:00Z');const y=d.getUTCFullYear(),m=d.getUTCMonth(),offset=d.getUTCDate()>=21?1:0;
+ return {start:new Date(Date.UTC(y,m+offset-1,21)).toISOString().slice(0,10),end:new Date(Date.UTC(y,m+offset,20)).toISOString().slice(0,10)};
+}

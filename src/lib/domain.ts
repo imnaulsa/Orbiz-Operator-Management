@@ -33,6 +33,11 @@ export type CopySkip = { operator_id:string; date:string; hour:number; reason:st
 export function copyTargetSummary(targets:string[],sourceCount:number,skipped:CopySkip[]) {
  return targets.map(date=>{const skippedCount=skipped.filter(row=>row.date===date).length;return {date,processed:sourceCount,ready:Math.max(0,sourceCount-skippedCount),skipped:skippedCount};});
 }
+export function groupCopySkips(skipped:CopySkip[]) {
+ const groups=new Map<string,{operator_id:string;date:string;issues:Map<string,number[]>}>();
+ for(const row of skipped){const key=row.operator_id+':'+row.date;const group=groups.get(key)??{operator_id:row.operator_id,date:row.date,issues:new Map()};const hours=group.issues.get(row.reason)??[];hours.push(row.hour);group.issues.set(row.reason,hours);groups.set(key,group);}
+ return [...groups.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.operator_id.localeCompare(b.operator_id)).map(group=>({operator_id:group.operator_id,date:group.date,issues:[...group.issues].map(([reason,hours])=>({reason,ranges:ranges(hours)}))}));
+}
 
 /** Period containing date; ends on the 20th. Filter only, not a payroll rule. */
 export function logbookPeriod(date:string){

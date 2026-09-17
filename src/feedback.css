@@ -20,6 +20,7 @@
 .copy-details{margin-top:16px}
 .copy-details summary{cursor:pointer;color:var(--purple);font-weight:600}
 .copy-details .table-wrap{margin-top:12px}
+.copy-issues{margin-top:20px}.copy-issues h3{margin-bottom:12px}.copy-issue-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.copy-issue-card{padding:15px;border:1px solid #eadfcf;border-left:4px solid #d8902f;border-radius:8px;background:#fffaf3}.copy-issue-card>div{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px}.copy-issue-card>div span{color:var(--muted);font-size:.8125rem}.copy-issue-card p{margin:8px 0 0;font-size:.8125rem;line-height:1.5}.copy-issue-card b{color:#895500}
 .shift-colleagues{display:grid;gap:4px;margin-top:14px;padding-top:12px;border-top:1px solid #e5dcef}
 .shift-colleagues small{color:var(--purple);font-size:.6875rem;letter-spacing:1px}
 .shift-colleagues strong{font-size:.875rem}

@@ -12,3 +12,15 @@
 .timeline .header-row>:first-child,.availability-grid .header-row>:first-child,.timeline .bands>:first-child{z-index:5}
 .timeline .date-divider strong{position:sticky;left:16px}
 .pool .leave-badge{color:#9a4c13;background:#fff5e8;padding:5px;border-radius:5px}
+.input-action{display:flex;gap:8px}
+.input-action button{flex:0 0 auto}
+.target-list{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:18px 0}
+.target-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border:1px solid #d8c7ef;border-radius:20px;background:var(--light);color:#573780;font-size:.8125rem}
+.target-chip button{border:0;background:transparent;padding:0;width:24px;min-height:24px;color:inherit;font-size:1.1rem}
+.copy-details{margin-top:16px}
+.copy-details summary{cursor:pointer;color:var(--purple);font-weight:600}
+.copy-details .table-wrap{margin-top:12px}
+.shift-colleagues{display:grid;gap:4px;margin-top:14px;padding-top:12px;border-top:1px solid #e5dcef}
+.shift-colleagues small{color:var(--purple);font-size:.6875rem;letter-spacing:1px}
+.shift-colleagues strong{font-size:.875rem}
+@media(max-width:700px){.input-action{align-items:stretch}.input-action input{min-width:0}}

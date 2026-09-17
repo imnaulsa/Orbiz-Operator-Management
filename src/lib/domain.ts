@@ -29,6 +29,11 @@ export function slotAllowed(operator:string,date:string,hour:number,slots:Slot[]
   return !leaves.some(l=>l.operator_id===operator&&l.status==='approved'&&Date.parse(l.starts_at)<a+3600000&&Date.parse(l.ends_at)>a);
 }
 
+export type CopySkip = { operator_id:string; date:string; hour:number; reason:string };
+export function copyTargetSummary(targets:string[],sourceCount:number,skipped:CopySkip[]) {
+ return targets.map(date=>{const skippedCount=skipped.filter(row=>row.date===date).length;return {date,processed:sourceCount,ready:Math.max(0,sourceCount-skippedCount),skipped:skippedCount};});
+}
+
 /** Period containing date; ends on the 20th. Filter only, not a payroll rule. */
 export function logbookPeriod(date:string){
  const d=new Date(date+'T00:00:00Z');const y=d.getUTCFullYear(),m=d.getUTCMonth(),offset=d.getUTCDate()>=21?1:0;

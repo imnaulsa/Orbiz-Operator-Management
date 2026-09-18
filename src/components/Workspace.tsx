@@ -8,7 +8,7 @@ import {Plotting} from './Plotting';
 import {Availability} from './Availability';
 import {Accounts} from './Accounts';
 import {CostReport,PersonalSchedule} from './Reports';
-export type Context={data:Data;profile:Profile;location:string;start:string;end:string;busy:boolean;run:(label:string,fn:()=>Promise<unknown>,confirm?:string)=>Promise<boolean>};
+export type Context={data:Data;profile:Profile;location:string;start:string;end:string;busy:boolean;setDateRange:(start:string,end:string)=>void;run:(label:string,fn:()=>Promise<unknown>,confirm?:string)=>Promise<boolean>};
 const links=[['/overview','Ringkasan'],['/plotting','Plotting Jadwal'],['/availability','Availability & Izin'],['/accounts','Operator Staff'],['/cost','Cost Operator']];
 export function Workspace(){
  const {profile}=useAuth();const path=useLocation().pathname;const [city,setCity]=useState('jakarta');const [start,setStart]=useState(monday(today())),[end,setEnd]=useState(addDays(monday(today()),6));const [revision,setRevision]=useState(0),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[actionError,setActionError]=useState('');
@@ -17,10 +17,10 @@ export function Workspace(){
  if(!profile)return <Navigate to="/login" replace/>;
  if(staff&&!['/my-schedule','/availability'].includes(path))return <Navigate to="/my-schedule" replace/>;
  if(!staff&&!links.some(([to])=>to===path))return <Navigate to="/overview" replace/>;
- const run:Context['run']=async(label,fn,confirm)=>{if(busy)return false;if(confirm&&!window.confirm(confirm))return false;setBusy(true);setMessage('');setActionError('');try{await fn();setMessage(label);setRevision(r=>r+1);return true;}catch(e){setActionError(errorText(e));return false;}finally{setBusy(false);}};
- const context={data,profile,location,start,end,busy:busy||!!error,run};
- const title=path==='/my-schedule'?'Jadwal & Logbook Saya':links.find(([to])=>to===path)?.[1];
  const resetDates=(s:string,e:string)=>{setStart(s);setEnd(e);setMessage('');setActionError('');};
+ const run:Context['run']=async(label,fn,confirm)=>{if(busy)return false;if(confirm&&!window.confirm(confirm))return false;setBusy(true);setMessage('');setActionError('');try{await fn();setMessage(label);setRevision(r=>r+1);return true;}catch(e){setActionError(errorText(e));return false;}finally{setBusy(false);}};
+ const context={data,profile,location,start,end,busy:busy||!!error,setDateRange:resetDates,run};
+ const title=path==='/my-schedule'?'Jadwal & Logbook Saya':links.find(([to])=>to===path)?.[1];
  let content:ReactNode;
  if(loading)content=<div className="card loading" role="status">Memuat data…</div>;
  else if(error&&data.profiles.length===0)content=<div className="notice error" role="alert">{error} <button onClick={()=>setRevision(r=>r+1)}>Coba lagi</button></div>;

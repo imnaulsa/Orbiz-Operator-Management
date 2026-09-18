@@ -39,7 +39,7 @@ export function groupCopySkips(skipped:CopySkip[]) {
  return [...groups.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.operator_id.localeCompare(b.operator_id)).map(group=>({operator_id:group.operator_id,date:group.date,issues:[...group.issues].map(([reason,hours])=>({reason,ranges:ranges(hours)}))}));
 }
 
-/** Period containing date; ends on the 20th. Filter only, not a payroll rule. */
+/** Mitra reporting period containing date: 21 of the previous month through 20 of the current month. */
 export function logbookPeriod(date:string){
  const d=new Date(date+'T00:00:00Z');const y=d.getUTCFullYear(),m=d.getUTCMonth(),offset=d.getUTCDate()>=21?1:0;
  return {start:new Date(Date.UTC(y,m+offset-1,21)).toISOString().slice(0,10),end:new Date(Date.UTC(y,m+offset,20)).toISOString().slice(0,10)};

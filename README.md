@@ -6,7 +6,7 @@ Mulai setup lewat browser: [Panduan Supabase + Netlify](docs/SETUP-DASHBOARD.md)
 
 React + Vite + TypeScript frontend, Supabase Auth/PostgreSQL/RLS, and a Netlify Function for account invitations. GitHub is the intended source of truth. Work branch: `feature/operator-management-v1`; production branch: `main`.
 
-**Status: implemented source candidate, not production-approved.** Local schema/RLS and unit checks pass. The GitHub repository is now identified; source is being submitted on the feature branch for PR review. Netlify preview, real Supabase Auth/REST/Realtime and browser UAT require configuration and validation listed below. No production deployment or push to main has been performed.
+**Status: Deploy Preview UAT candidate, not yet merged to production.** Hosted Auth, PostgREST/RLS, Realtime fallback, desktop/mobile flows and account invitations have been exercised on the development environment. The feature branch remains the only application branch until explicit approval to merge `main`.
 
 ## What is implemented
 
@@ -18,11 +18,11 @@ React + Vite + TypeScript frontend, Supabase Auth/PostgreSQL/RLS, and a Netlify 
 - Hourly plotting, grouped operator rows, adjacent ranges, single-hour deletion, drafts.
 - Copy source day to multiple targets, preview, merge/replace, per-cell validation and transaction.
 - Versioned weekly publication and staff-only published schedule, limited overlap colleague names.
-- Append-only effective-date rates, publication fee snapshots, custom/calendar-month cost, combined locations for Super Admin.
+- Append-only effective-date rates, publication fee snapshots, custom/calendar-month/Mitra 21–20 cost periods, combined locations for Super Admin.
 - Personal `.xlsx` export with six HR columns, direct RLS database read and pagination.
 - Audit records and Realtime location invalidation, with 15-second/focus refetch fallback.
 
-Pending business features: true overnight shifts; final Mitra cutoff preset; any additional HR logbook columns. See `docs/IMPLEMENTATION-PLAN.md` for explicit decisions and blockers.
+Pending business features outside this release: true overnight shifts and any additional HR logbook columns. See `docs/IMPLEMENTATION-PLAN.md` for explicit decisions and blockers.
 
 ## Local setup
 
@@ -137,9 +137,9 @@ npm run build
 node scripts/check-secrets.mjs
 ```
 
-- `npm test`: 21 unit/server tests (domain grouping/dates/validation/pagination, Auth Admin boundary, true OOXML export).
+- `npm test`: 29 unit/server tests (domain grouping/dates/validation/pagination, Mitra 20/21 boundary, Auth Admin boundary, true OOXML export).
 - `npm run test:db`: 91 checks against PGlite's PostgreSQL engine with unmodified migrations, real grants/RLS and six synthetic identities (the five required roles plus an overlapping colleague).
-- Auth schema/JWT claims are simulated only inside this test harness. This does not test hosted Supabase Auth, PostgREST, SMTP, concurrency, WebSockets or Netlify.
+- Auth schema/JWT claims are simulated inside this test harness; hosted Auth, PostgREST, Realtime/fallback and Netlify behavior are covered separately by the recorded UAT.
 - `supabase/tests/security.test.sql`: additional native pgTAP smoke suite for a local full Supabase stack, supplied but not executed in this environment.
 - `src/lib/database.generated.ts` is generated from the migrated PostgreSQL catalog by the database suite. Browser Insert/Update are intentionally `never`; writes use RPCs.
 - With a running local Supabase stack, `npm run types:generate` can regenerate the standard Supabase CLI types. Review resulting differences, rerun typecheck/tests, and commit intentional schema/type changes together. The PGlite suite regenerates its catalog-derived version, so use one canonical generation path consistently in CI.
@@ -147,18 +147,17 @@ node scripts/check-secrets.mjs
 
 ## Known limitations / release gates
 
-- GitHub repository is identified and the source is submitted through the feature branch/PR. Netlify Deploy Preview still needs setup. No real Supabase credentials or accounts used.
-- Browser checks could not run: this runtime has no Chromium executable; the attempted browser CLI installation was unavailable under the active network constraints. Do not treat UI browser QA as passed.
-- Hosted Auth/recovery/invitation/email, actual PostgREST RLS behavior, Realtime cancellation and concurrent manager operations need development UAT.
+- Feature branch PR and Netlify Deploy Preview are active. The UAT workbook records 80/80 desktop and 34/34 mobile scenarios passing against the development environment.
+- Concurrent manager mutations are serialized per location by `private.lock_location`; keep the two-manager hosted smoke test in future regression cycles.
 - True cross-midnight shifts remain disabled. Same-day `24:00` end boundaries work; staff must not silently split overnight shifts until the business rule is agreed.
-- Mitra preset remains disabled because prompt and prototype describe different intervals; custom date ranges and calendar months work.
+- Mitra preset follows the confirmed inclusive period: the 21st of the previous month through the 20th of the current month, based on the selected start date in WIB.
 - Only the six required HR columns are exported. No invented additional fields or real operators.
 - Fee changes cannot be backdated or applied to dates already published; rate history is append-only. A correction workflow or historical payroll locking requires additional agreed rules.
 - Cost is a live estimate of active published assignments. Leave/cancellation or deliberate republishing can change working hours; the guarantee is that merely adding a newer rate does not rewrite old salary rates.
 - Account location transfer with history requires a separate migration process. Deactivation cancels assignments from today onward and immediately blocks database access.
 - Timeline/availability grid renders up to 31 days; narrow the date filter for later days. Cost/export support up to 367 days and paginate database reads.
 - Forecast coverage, staffing demand, actual attendance and payroll payout are outside this requested implementation; no synthetic dashboard metrics are presented as real data.
-- Dependency audit must be refreshed in CI/Netlify. The initially detected legacy ExcelJS dependency was removed; export now uses the small `fflate` package and exact OOXML generation, tested independently.
+- CI runs `npm audit --audit-level=moderate`. The Vitest path-traversal advisory was removed by upgrading to the patched line; export uses `fflate` and exact OOXML generation, tested independently.
 
 ## Technical references
 

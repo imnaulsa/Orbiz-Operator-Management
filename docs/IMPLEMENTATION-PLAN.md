@@ -33,15 +33,15 @@
 - Pending izin belum membatalkan assignment. Approved izin membatalkan draft dan published bersamaan.
 - Sinyal lokasi hanya memiliki `location_id` dan `revision`, sehingga staff menerima invalidation tanpa membaca data rekan.
 
-## Menunggu input user
+## Status keputusan dan environment
 
 | Item | Status / dampak |
 |---|---|
-| URL repository GitHub | Belum diberikan; remote, PR dan branch remote belum dibuat |
-| Supabase development URL/anon | Belum diberikan; auth/email/REST/Realtime asli belum diuji |
-| Netlify site/account + server environment | Belum diberikan; Deploy Preview belum tersedia |
-| Email Naulsa/Hilal/Samuel | Tetap placeholder; akun nyata belum dibuat |
-| Data operator | Tidak diisi dari asumsi; fixture test diberi nama TEST |
+| URL repository GitHub | Terhubung ke `imnaulsa/Orbiz-Operator-Management`; PR feature branch aktif |
+| Supabase development | Terhubung; hosted Auth, PostgREST/RLS dan Realtime/fallback sudah diuji |
+| Netlify | Deploy Preview PR #1 aktif dan dipakai untuk UAT |
+| Identitas akun | Tidak ditulis di source; akun nyata dikelola melalui undangan aplikasi |
+| Data operator | Data UAT dikelola di project development; tidak ada kredensial di repository |
 | Lintas tengah malam | Menunggu keputusan tanggal payroll, availability dan pemecahan shift |
-| Cutoff Mitra | Prototype 21 bulan lalu–20 bulan terpilih; prompt menyebut 20 bulan berikutnya. Preset disabled, custom range tersedia |
+| Cutoff Mitra | Final: tanggal 21 bulan sebelumnya sampai tanggal 20 bulan berjalan, inklusif; preset aktif di Cost Operator |
 | Kolom tambahan HR | Hanya enam kolom minimum diimplementasikan; tambahan menunggu konfirmasi |

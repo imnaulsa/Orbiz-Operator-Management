@@ -55,7 +55,7 @@ Source mempertahankan nama environment `ANON_KEY` sesuai spesifikasi awal. Nilai
 5. Masukkan environment development pada context **Deploy Previews** menggunakan tabel di bawah.
 6. Tetapkan nama site, misalnya `orbiz-operator-management` bila tersedia. Nama sebenarnya menentukan origin preview.
 
-PENTING: `main` saat ini hanya baseline README, sehingga initial build dari `main` belum bisa membangun aplikasi. Ini bukan alasan untuk merge lebih awal. Pengujian dilakukan dari PR feature branch melalui Deploy Preview. Setelah integrasi GitHub/Netlify terpasang, PR mungkin membutuhkan push baru/reopen untuk memicu preview karena PR sudah dibuat sebelum Netlify terhubung. Kirim nama site atau tautan Netlify agar langkah trigger dapat dilanjutkan.
+PENTING: pengujian dilakukan dari PR feature branch melalui Deploy Preview sebelum merge. Preview aktif berada di `https://deploy-preview-1--dynamic-unicorn-4cd699.netlify.app`; `main` baru menjadi production source setelah approval eksplisit dan seluruh check commit terakhir hijau.
 
 ## 5. Isi environment Netlify
 

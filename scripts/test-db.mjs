@@ -23,7 +23,7 @@ async function check(name,fn){await fn(); passed++; console.log('PASS',name);}
 const deny=async(user,sql,args=[])=>assert.rejects(()=>as(user,sql,args));
 const rpc=async(user,name,args=[],params=[])=>as(user,`select public.${name}(${params.map((t,i)=>'$'+(i+1)+(t?'::'+t:'')).join(',')}) as result`,args);
 for(let i=1;i<6;i++) await rpc(0,'manage_account',[ids[i],`TEST ${i}`,i<3?'operator_manager':'staff',i===2||i===4?'bandung':'jakarta','mitra',true,i<3?null:20000,'2099-01-01'],['uuid','text','public.app_role','text','public.employment_type','boolean','numeric','date']);
-await check('all ten tables have RLS',async()=>assert.equal((await db.query("select count(*)::int n from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relrowsecurity")).rows[0].n,10));
+await check('all public tables have RLS',async()=>assert.equal((await db.query("select count(*)::int n from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and not c.relrowsecurity")).rows[0].n,0));
 for (const [u,n] of [[0,6],[1,3],[2,2],[3,1],[4,1]]) await check(`profile visibility role ${u}`,async()=>assert.equal((await as(u,'select * from public.profiles')).length,n));
 await check('anon cannot read profiles',async()=>assert.rejects(()=>db.transaction(async tx=>{await tx.exec('set local role anon');await tx.exec('select * from public.profiles');})));
 for (const table of ['profiles','operator_rates','availability_submissions','availability_slots','leave_requests','schedule_publications','schedule_assignments','audit_logs']) {
@@ -111,6 +111,8 @@ await rpc(1,'manage_account',[ids[3],'TEST 3','staff','jakarta','mitra',false],[
 await check('inactive token cannot read data',async()=>assert.equal((await as(3,'select * from public.schedule_assignments')).length,0));
 await check('inactive token cannot mutate',()=>deny(3,'select public.submit_partial_availability($1::jsonb)',[slots]));
 await check('missing-profile token fails closed',async()=>assert.equal((await as('00000000-0000-4000-8000-999999999999','select * from public.profiles')).length,0));
+const {testProduction}=await import('./test-production-db.mjs');
+await testProduction({db,as,check,ids});
 // Generate types from the actual migrated catalog, including nullability and RPC arguments.
 const enums=(await db.query("select t.typname, e.enumlabel from pg_type t join pg_enum e on e.enumtypid=t.oid join pg_namespace n on n.oid=t.typnamespace where n.nspname='public' order by t.typname,e.enumsortorder")).rows;
 const enumMap={}; for(const e of enums)(enumMap[e.typname]??=[]).push(e.enumlabel);

@@ -1,0 +1,20 @@
+.production nav button{text-align:left;border:0;background:transparent;width:100%;color:inherit;padding:12px 14px;border-radius:8px}
+.production nav button.selected{background:#ede5fb;color:#6c32b9;font-weight:700}
+.production fieldset{border:0;padding:0;margin:0;min-width:0}
+.production details{border-top:1px solid #e7e2ee;padding:16px 0}
+.production summary{cursor:pointer;font-weight:600;margin-bottom:12px}
+.production .row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.production .studio-timeline{min-width:1800px;table-layout:fixed}
+.production .studio-timeline th:first-child{width:160px;position:sticky;left:0;background:#faf8fd;z-index:1}
+.production .studio-timeline td{overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.production .studio-timeline td.occupied{background:#eee7fb;color:#593394}
+.production .studio-timeline td.published{background:#daf3e6;color:#1e6747}
+.production .availability-grid button{width:100%;font-size:12px;min-width:84px;padding:8px 4px;user-select:none}
+.production .availability-grid button.selected{background:#753bbd;color:#fff}
+.production .availability-grid button.approved{background:#daf3e6;color:#1e6747;opacity:1}
+.production .availability-grid button.pending{background:#fff1cf;color:#785213;opacity:1}
+.production .check-label{display:flex;align-items:center;gap:10px;margin:14px 0}
+.production .check-label input{width:auto}
+.production .status.published{background:#daf3e6;color:#1e6747}
+.production .status.draft{background:#eee7fb;color:#593394}
+.production button:focus-visible{outline:3px solid #a886d7;outline-offset:2px}

@@ -2,8 +2,7 @@ import {strToU8,zipSync} from 'fflate';
 const xml=(value:string)=>value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;');
 const declaration='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 // Minimal Office Open XML workbook. Text is always inlineStr, never a formula.
-export function logbookWorkbook(rows:(string|number)[][]):Uint8Array {
- const headers=['Hari dan Tanggal','Nama Operator','Lokasi','Jam Mulai','Jam Selesai','Jumlah Jam Jaga'];
+export function logbookWorkbook(rows:(string|number)[][],headers=['Hari dan Tanggal','Nama Operator','Lokasi','Jam Mulai','Jam Selesai','Jumlah Jam Jaga']):Uint8Array {
  const cells=[headers,...rows].map((row,i)=>`<row r="${i+1}">${row.map((v,j)=>{const r=String.fromCharCode(65+j)+(i+1);return typeof v==='number'?`<c r="${r}"><v>${v}</v></c>`:`<c r="${r}" t="inlineStr"${i===0?' s="1"':''}><is><t xml:space="preserve">${xml(v)}</t></is></c>`;}).join('')}</row>`).join('');
  const files:Record<string,string>={
  '[Content_Types].xml':'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',

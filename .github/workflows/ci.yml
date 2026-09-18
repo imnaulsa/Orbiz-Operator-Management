@@ -2,7 +2,7 @@ name: Validate operator management
 on:
   pull_request:
   push:
-    branches: [feature/operator-management-v1]
+    branches: [feature/operator-management-v1, feature/livestreaming-production-v1]
 permissions:
   contents: read
 jobs:

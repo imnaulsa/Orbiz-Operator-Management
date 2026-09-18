@@ -1,0 +1,26 @@
+name: Validate operator management
+on:
+  pull_request:
+  push:
+    branches: [feature/operator-management-v1]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm audit --audit-level=moderate
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:db
+      - run: npm run build
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ORBIZ_SERVER_ONLY_CANARY_2026
+      - run: node scripts/check-secrets.mjs
+      - run: git diff --exit-code -- src/lib/database.generated.ts

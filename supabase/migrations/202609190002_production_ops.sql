@@ -5,13 +5,13 @@ create table public.production_studios (
  unique(location_id,name)
 );
 create table public.production_quotations (
- id uuid primary key default gen_random_uuid(), location_id text not null references public.locations(id),
+ id uuid primary key default gen_random_uuid(), location_id text references public.locations(id),
  reference text not null check(length(trim(reference)) between 1 and 120), brand text not null check(length(trim(brand)) between 1 and 120),
  account text not null check(length(trim(account)) between 1 and 120), platform text not null check(platform in ('TikTok','Shopee')),
  period_start date not null, period_end date not null, hours integer not null check(hours between 1 and 10000),
  rate numeric(14,2) not null check(rate>=0), best_hours integer[] not null default '{}',
  created_by uuid not null references public.profiles(id), created_at timestamptz not null default now(),
- check(period_end>=period_start and period_end-period_start<=366), unique(location_id,reference)
+ check(period_end>=period_start and period_end-period_start<=366), unique(reference)
 );
 create table public.host_availability (
  id uuid primary key default gen_random_uuid(), host_id uuid not null references public.profiles(id),
@@ -76,7 +76,7 @@ begin
  if p_start is null or p_end is null or p_end<p_start or p_end-p_start>366 then raise exception 'Rentang maksimal 367 hari'; end if;
  select jsonb_build_object(
  'studios',coalesce((select jsonb_agg(to_jsonb(s) order by s.name) from public.production_studios s where s.location_id=p_location),'[]'::jsonb),
- 'quotations',coalesce((select jsonb_agg(case when actor.role in ('super_admin','admin_sales') then to_jsonb(q) else to_jsonb(q)-'rate' end || jsonb_build_object('allocated_hours',(select coalesce(sum(x.end_hour-x.start_hour),0) from public.live_sessions x where x.quotation_id=q.id and x.status<>'cancelled')) order by q.period_start,q.reference) from public.production_quotations q where q.location_id=p_location and q.period_end>=p_start and q.period_start<=p_end),'[]'::jsonb),
+ 'quotations',coalesce((select jsonb_agg(case when actor.role in ('super_admin','admin_sales') then to_jsonb(q) else to_jsonb(q)-'rate' end || jsonb_build_object('allocated_hours',(select coalesce(sum(x.end_hour-x.start_hour),0) from public.live_sessions x where x.quotation_id=q.id and x.status<>'cancelled')) order by q.period_start,q.reference) from public.production_quotations q where q.period_end>=p_start and q.period_start<=p_end),'[]'::jsonb),
  'hosts',coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'display_name',p.display_name,'active',p.active) order by p.display_name) from public.profiles p where p.location_id=p_location and p.role='host' and (private.production_manager(p_location) or p.id=actor.id)),'[]'::jsonb),
  'availability',coalesce((select jsonb_agg(to_jsonb(a) order by a.work_date,a.hour,a.id) from public.host_availability a where a.location_id=p_location and a.work_date between p_start and p_end and (private.production_manager(p_location) or a.host_id=actor.id)),'[]'::jsonb),
  'leaves',coalesce((select jsonb_agg(to_jsonb(l) order by l.work_date,l.id) from public.host_leaves l where l.location_id=p_location and l.work_date between p_start and p_end and (private.host_manager(p_location) or l.host_id=actor.id)),'[]'::jsonb),
@@ -103,20 +103,20 @@ declare actor public.profiles; loc text; sid uuid; q public.production_quotation
 begin
  select * into actor from public.profiles where id=auth.uid() and active;
  loc:=p_payload->>'location';
- if actor.id is null or loc is null or (actor.role<>'super_admin' and actor.location_id is distinct from loc) then raise exception 'Akses ditolak' using errcode='42501'; end if;
- perform private.lock_location(loc);
+ if actor.id is null or (p_action<>'quotation' and (loc is null or (actor.role<>'super_admin' and actor.location_id is distinct from loc))) then raise exception 'Akses ditolak' using errcode='42501'; end if;
+ if p_action<>'quotation' then perform private.lock_location(loc); end if;
  if p_action='studio' then
   if actor.role not in ('super_admin','operator_manager') then raise exception 'Hanya pengelola production'; end if;
   insert into public.production_studios(location_id,name,capacity) values(loc,trim(p_payload->>'name'),(p_payload->>'capacity')::integer) returning id into rid;
  elsif p_action='quotation' then
   if actor.role not in ('super_admin','admin_sales') then raise exception 'Hanya Admin Sales'; end if;
   if exists(select 1 from jsonb_array_elements_text(p_payload->'best_hours') h where h::integer not between 0 and 23) then raise exception 'Best hours tidak valid'; end if;
-  insert into public.production_quotations(location_id,reference,brand,account,platform,period_start,period_end,hours,rate,best_hours,created_by)
-  values(loc,trim(p_payload->>'reference'),trim(p_payload->>'brand'),trim(p_payload->>'account'),p_payload->>'platform',(p_payload->>'period_start')::date,(p_payload->>'period_end')::date,(p_payload->>'hours')::integer,(p_payload->>'rate')::numeric,array(select distinct value::integer from jsonb_array_elements_text(p_payload->'best_hours')),actor.id) returning id into rid;
+  insert into public.production_quotations(reference,brand,account,platform,period_start,period_end,hours,rate,best_hours,created_by)
+  values(trim(p_payload->>'reference'),trim(p_payload->>'brand'),trim(p_payload->>'account'),p_payload->>'platform',(p_payload->>'period_start')::date,(p_payload->>'period_end')::date,(p_payload->>'hours')::integer,(p_payload->>'rate')::numeric,array(select distinct value::integer from jsonb_array_elements_text(p_payload->'best_hours')),actor.id) returning id into rid;
  elsif p_action='best_hours' then
   if not private.production_manager(loc) then raise exception 'Hanya manager'; end if;
   if exists(select 1 from jsonb_array_elements_text(p_payload->'hours') h where h::integer not between 0 and 23) then raise exception 'Jam tidak valid'; end if;
-  update public.production_quotations set best_hours=array(select distinct value::integer from jsonb_array_elements_text(p_payload->'hours')) where id=(p_payload->>'id')::uuid and location_id=loc returning id into rid;
+  update public.production_quotations set best_hours=array(select distinct value::integer from jsonb_array_elements_text(p_payload->'hours')) where id=(p_payload->>'id')::uuid returning id into rid;
   if rid is null then raise exception 'Quotation tidak ditemukan'; end if;
  elsif p_action='availability' then
   if actor.role<>'host' then raise exception 'Hanya Host'; end if;
@@ -161,7 +161,7 @@ begin
   insert into public.host_rates(host_id,location_id,effective_date,hourly_fee,created_by) values(hid,loc,d,(p_payload->>'fee')::numeric,actor.id) returning id into rid;
  elsif p_action='session' then
   if not private.production_manager(loc) then raise exception 'Hanya manager'; end if;
-  select * into q from public.production_quotations where id=(p_payload->>'quotation')::uuid and location_id=loc;
+  select * into q from public.production_quotations where id=(p_payload->>'quotation')::uuid;
   if not found then raise exception 'Quotation tidak valid'; end if;
   select * into st from public.production_studios where id=(p_payload->>'studio')::uuid and location_id=loc;
   if not found then raise exception 'Studio tidak valid'; end if;
@@ -175,7 +175,7 @@ begin
   insert into public.live_sessions(location_id,quotation_id,studio_id,lane,work_date,start_hour,end_hour,host_id,created_by) values(loc,q.id,st.id,lane_value,d,hs,he,hid,actor.id) returning id into rid;
  elsif p_action='auto_plot' then
   if not private.production_manager(loc) then raise exception 'Hanya manager'; end if;
-  select * into q from public.production_quotations where id=(p_payload->>'quotation')::uuid and location_id=loc;
+  select * into q from public.production_quotations where id=(p_payload->>'quotation')::uuid;
   if not found or cardinality(q.best_hours)=0 then raise exception 'Isi best hours quotation terlebih dahulu'; end if;
   select * into st from public.production_studios where id=(p_payload->>'studio')::uuid and location_id=loc;
   if not found then raise exception 'Studio tidak valid'; end if;
@@ -235,7 +235,7 @@ begin
    insert into public.live_checks(session_id,location_id,kind,submitted_by,answers,note,actual_start,actual_end) values(s.id,loc,p_payload->>'kind',actor.id,p_payload->'answers',coalesce(p_payload->>'note',''),case when p_payload->>'kind'='host' then (p_payload->>'actual_start')::timestamptz end,case when p_payload->>'kind'='host' then (p_payload->>'actual_end')::timestamptz end) returning id into rid;
   end if;
  else raise exception 'Aksi tidak dikenal'; end if;
- perform private.audit(loc,'production.'||p_action,rid,jsonb_build_object('actor',actor.id));
+ perform private.audit(case when p_action='quotation' then null else loc end,'production.'||p_action,rid,jsonb_build_object('actor',actor.id));
  return jsonb_build_object('id',rid);
 end $$;
 revoke all on function private.production_manager(text),private.host_manager(text),private.host_available(uuid,text,date,integer,integer,uuid) from public,anon,authenticated;

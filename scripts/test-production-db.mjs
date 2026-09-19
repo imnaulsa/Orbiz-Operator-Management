@@ -20,6 +20,7 @@ export async function testProduction({db,as,check,ids}){
  const studio=(await call(1,'studio',{name:'Studio A',capacity:1})).id;
  const quotation=(await call('sales','quotation',{reference:'Q1',brand:'Test brand',account:'Test store',platform:'TikTok',period_start:'2099-01-05',period_end:'2099-01-11',hours:8,rate:100000,best_hours:[8,9]})).id;
  await check('quotation reference duplicate rejected',()=>denied('sales','quotation',{reference:'Q1',brand:'Test',account:'Test',platform:'TikTok',period_start:'2099-01-05',period_end:'2099-01-11',hours:8,rate:1,best_hours:[8]}));
+ await check('quotation is general and visible in both locations',async()=>{const other=await snap('hb','bandung');assert.equal(other.quotations[0].id,quotation);assert.equal(other.quotations[0].location_id,null);});
  await check('cross location snapshot denied',()=>assert.rejects(()=>snap('hb')));
  await check('cross location action denied',()=>denied('hb','studio',{name:'NO',capacity:1}));
  const slots=[5,6,7,8].flatMap(day=>[8,9,10].map(hour=>({date:`2099-01-0${day}`,hour})));

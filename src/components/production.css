@@ -5,6 +5,12 @@
 .production .nav-section-label{margin:6px 12px 2px;color:#8c8795;font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;line-height:1.4}
 .production .schedule-table-card .section-head{margin-bottom:10px}
 .production .schedule-table-card .section-head p{margin:6px 0 0}
+.production .period-toolbar select{min-width:145px}
+.production .compact-filter{max-width:520px;margin-bottom:18px}
+.production .schedule-filters{grid-template-columns:repeat(4,minmax(150px,1fr));margin-bottom:18px}
+.production .row-actions.compact{gap:4px;min-width:150px}
+.production .row-actions.compact button{padding:5px 8px;min-height:30px;font-size:12px}
+.production .edit-panel{border-left:4px solid var(--purple)}
 .production fieldset{border:0;padding:0;margin:0;min-width:0}
 .production details{border-top:1px solid #e7e2ee;padding:16px 0}
 .production summary{cursor:pointer;font-weight:600;margin-bottom:12px}
@@ -27,4 +33,5 @@
  .production nav{gap:8px}
  .production .nav-group{display:flex;align-items:center;gap:4px}
  .production .nav-section-label{white-space:nowrap;margin:0 6px 0 12px}
+ .production .schedule-filters{grid-template-columns:1fr 1fr}
 }

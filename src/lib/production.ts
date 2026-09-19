@@ -3,20 +3,26 @@ import type {Database,Json} from './database.generated';
 type Row<K extends keyof Database['public']['Tables']> = Database['public']['Tables'][K]['Row'];
 export type LiveSession=Omit<Row<'live_sessions'>,'host_fee'> & {host_fee?:number|null};
 export type Quotation=Omit<Row<'production_quotations'>,'rate'> & {rate?:number;allocated_hours:number};
+export type BestHourSlot={start:number;end:number};
 export type OperatorDaily={work_date:string;planned_hours:number;eligible_hours:number};
-export type ProductionData={studios:Row<'production_studios'>[];quotations:Quotation[];hosts:{id:string;display_name:string;active:boolean}[];availability:Row<'host_availability'>[];leaves:Row<'host_leaves'>[];rates:Row<'host_rates'>[];sessions:LiveSession[];checks:Row<'live_checks'>[]};
-export async function productionSnapshot(location:string,start:string,end:string):Promise<ProductionData>{
- const {data,error}=await db().rpc('production_snapshot',{p_location:location,p_start:start,p_end:end});
+export type ProductionData={brands:Row<'production_brands'>[];studios:Row<'production_studios'>[];quotations:Quotation[];hosts:{id:string;display_name:string;active:boolean;location_id:string}[];availability:Row<'host_availability'>[];leaves:Row<'host_leaves'>[];rates:Row<'host_rates'>[];sessions:LiveSession[];checks:Row<'live_checks'>[]};
+export async function productionSnapshot(location:string|null,start:string,end:string):Promise<ProductionData>{
+ const {data,error}=await db().rpc('production_snapshot_v2',{p_location:location,p_start:start,p_end:end});
  if(error)throw error;return data as unknown as ProductionData;
 }
 export async function productionAction(action:string,payload:Record<string,Json|undefined>){
- const {data,error}=await db().rpc('production_action',{p_action:action,p_payload:payload});
- if(error)throw error;return data as {id?:string;created?:number;remaining?:number};
+ const {data,error}=await db().rpc('production_action_v2',{p_action:action,p_payload:payload});
+ if(error)throw error;return data as {id?:string;created?:number;remaining?:number;assigned?:number};
 }
 export function parseHours(value:string){
  const hours=value.split(',').map(s=>s.trim()).filter(Boolean).map(Number);
  if(hours.some(n=>!Number.isInteger(n)||n<0||n>23))throw new Error('Isi jam 0–23 dipisahkan koma, misalnya 9,10,19,20');
  return [...new Set(hours)];
+}
+export function parseBestHourSlots(value:string):BestHourSlot[]{
+ const slots=value.split(',').map(v=>v.trim()).filter(Boolean).map(v=>{const match=v.match(/^(\d{1,2})(?::00)?\s*-\s*(\d{1,2})(?::00)?$/);if(!match)throw new Error('Format best hour: 09-11, 19-22');return {start:Number(match[1]),end:Number(match[2])};});
+ if(!slots.length||slots.some(s=>!Number.isInteger(s.start)||!Number.isInteger(s.end)||s.start<0||s.start>23||s.end<1||s.end>24||s.end<=s.start))throw new Error('Best hour harus berupa rentang valid, misalnya 09-11, 19-22');
+ return slots;
 }
 export function hostDailySummary(data:ProductionData,hostId?:string){
  const result=new Map<string,{date:string;host:string;planned:number;actual:number;eligible:number;estimated:number;earned:number;pending:number}>();

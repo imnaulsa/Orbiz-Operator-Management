@@ -1,1 +1,1 @@
-149 passed. Engine: PGlite PostgreSQL; synthetic auth.uid/JWT claims, real PostgreSQL roles, grants, RLS and unmodified migrations. Hosted Supabase Auth, REST, concurrency and Realtime NOT covered.
+153 passed. Engine: PGlite PostgreSQL; synthetic auth.uid/JWT claims, real PostgreSQL roles, grants, RLS and unmodified migrations. Hosted Supabase Auth, REST, concurrency and Realtime NOT covered.

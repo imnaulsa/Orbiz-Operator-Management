@@ -32,8 +32,9 @@ In the new project's SQL editor, run each file separately, in this order:
 6. `supabase/migrations/202609190002_production_ops.sql`
 7. `supabase/migrations/202609190003_production_accounts.sql`
 8. `supabase/migrations/202609190004_locations.sql`
+9. `supabase/migrations/202609190005_planning_master.sql`
 
-The last migration is safe to rerun. It guarantees that Jakarta/Bandung reference rows exist and upgrades quotations into general commercial master data shared across locations. `supabase/seed.sql` remains an optional local-development seed and is no longer required for the location rows.
+The last two migrations are safe to rerun. They guarantee that Jakarta/Bandung reference rows exist, upgrade quotations into general commercial master data shared across locations, and add Brand/Shop ID mapping, Mirror, duration-based best hours, multi-date plotting, and global schedule filtering. `supabase/seed.sql` remains an optional local-development seed and is no longer required for the location rows.
 
 Step 5 must commit before step 6/7 references the new enum values. Do not combine all migration files into one transaction. If the project already has migrations 1–4, only apply the missing files after verifying its migration history.
 

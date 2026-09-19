@@ -8,6 +8,8 @@ export async function testProduction({db,as,check,ids}){
  }
  const call=async(user,action,payload)=> (await as(roleIds[user]??user,'select public.production_action($1,$2::jsonb) result',[action,JSON.stringify({location:'jakarta',...payload})]))[0].result;
  const snap=async(user,location='jakarta',start='2099-01-05',end='2099-01-11')=>(await as(roleIds[user]??user,'select public.production_snapshot($1,$2,$3) result',[location,start,end]))[0].result;
+ const callV2=async(user,action,payload)=> (await as(roleIds[user]??user,'select public.production_action_v2($1,$2::jsonb) result',[action,JSON.stringify(payload)]))[0].result;
+ const snapV2=async(user,location=null,start='2099-01-05',end='2099-01-11')=>(await as(roleIds[user]??user,'select public.production_snapshot_v2($1,$2,$3) result',[location,start,end]))[0].result;
  const denied=(u,a,p)=>assert.rejects(()=>call(u,a,p));
  await check('production anon RPC denied',()=>assert.rejects(()=>db.transaction(async tx=>{await tx.exec('set local role anon');await tx.exec("select public.production_snapshot('jakarta','2099-01-05','2099-01-11')");})));
  for(const t of ['production_studios','production_quotations','host_availability','host_leaves','host_rates','live_sessions','live_checks']){
@@ -18,6 +20,16 @@ export async function testProduction({db,as,check,ids}){
  await check('host manager cannot create sales account',()=>assert.rejects(()=>as(roleIds.hm,"select public.manage_account($1,'NO','admin_sales','jakarta','mitra',true)",[roleIds.h1])));
  await check('host cannot use operator availability workflow',()=>assert.rejects(()=>as(roleIds.h1,"select public.submit_partial_availability('[{\"date\":\"2099-01-05\",\"hour\":8}]')")));
  const studio=(await call(1,'studio',{name:'Studio A',capacity:1})).id;
+ const studioMirror=(await call(1,'studio',{name:'Studio Mirror',capacity:1})).id;
+ const brand=(await callV2(0,'master_brand',{name:'Mirror Brand',tiktok:'TT-MIRROR',shopee:'SP-MIRROR',mirror:'ST-MIRROR'})).id;
+ const mirrorQuotation=(await callV2('sales','quotation',{reference:'QM',brand,platform:'Mirror',period_start:'2099-01-05',period_end:'2099-01-11',hours:6,rate:83333})).id;
+ await callV2(1,'best_hour_slots',{location:'jakarta',quotation:mirrorQuotation,slots:[{start:8,end:10}]});
+ await check('Mirror quotation uses ST mapping and stays general',async()=>{const data=await snapV2(0);const q=data.quotations.find(q=>q.id===mirrorQuotation);assert.equal(q.account,'ST-MIRROR');assert.equal(q.location_id,null);assert.equal(data.brands[0].shop_id_tiktok,'TT-MIRROR');assert.equal(data.brands[0].shop_id_shopee,'SP-MIRROR');});
+ const multi=await callV2(1,'session_multi',{location:'jakarta',quotation:mirrorQuotation,studio:studioMirror,dates:['2099-01-05','2099-01-06'],start:8,end:10,host:''});
+ await check('manual multi-date creates duration blocks with automatic capacity lane',async()=>{assert.equal(multi.created,4);const rows=(await snapV2(0)).sessions.filter(s=>s.quotation_id===mirrorQuotation);assert.equal(rows.length,2);assert(rows.every(s=>s.end_hour-s.start_hour===2&&s.lane===1));});
+ const automatic=await callV2(1,'auto_plot_blocks',{location:'jakarta',quotation:mirrorQuotation,studio:studioMirror,hosts:[]});
+ await check('best-hour auto plot preserves block duration',async()=>{assert.equal(automatic.created,2);const rows=(await snapV2(0)).sessions.filter(s=>s.quotation_id===mirrorQuotation);assert.equal(rows.length,3);assert(rows.every(s=>s.end_hour-s.start_hour===2));});
+ await check('non-superadmin cannot request global operational snapshot',()=>assert.rejects(()=>snapV2('hm')));
  const quotation=(await call('sales','quotation',{reference:'Q1',brand:'Test brand',account:'Test store',platform:'TikTok',period_start:'2099-01-05',period_end:'2099-01-11',hours:8,rate:100000,best_hours:[8,9]})).id;
  await check('quotation reference duplicate rejected',()=>denied('sales','quotation',{reference:'Q1',brand:'Test',account:'Test',platform:'TikTok',period_start:'2099-01-05',period_end:'2099-01-11',hours:8,rate:1,best_hours:[8]}));
  await check('quotation is general and visible in both locations',async()=>{const other=await snap('hb','bandung');assert.equal(other.quotations[0].id,quotation);assert.equal(other.quotations[0].location_id,null);});

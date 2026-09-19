@@ -1,0 +1,54 @@
+.production nav button{text-align:left;border:0;background:transparent;width:100%;color:inherit;padding:12px 14px;border-radius:8px}
+.production nav button.selected{background:#ede5fb;color:#6c32b9;font-weight:700}
+.production nav{gap:14px;overflow-y:auto}
+.production .nav-group{display:grid;gap:4px}
+.production .nav-section-label{margin:6px 12px 2px;color:#8c8795;font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;line-height:1.4}
+.production .schedule-table-card .section-head{margin-bottom:10px}
+.production .schedule-table-card .section-head p{margin:6px 0 0}
+.production .period-toolbar select{min-width:145px}
+.production .compact-filter{max-width:520px;margin-bottom:18px}
+.production .schedule-filters{grid-template-columns:repeat(4,minmax(150px,1fr));margin-bottom:18px}
+.production .row-actions.compact{gap:4px;min-width:150px}
+.production .row-actions.compact button{padding:5px 8px;min-height:30px;font-size:12px}
+.production .edit-panel{border-left:4px solid var(--purple)}
+.production fieldset{border:0;padding:0;margin:0;min-width:0}
+.production details{border-top:1px solid #e7e2ee;padding:16px 0}
+.production summary{cursor:pointer;font-weight:600;margin-bottom:12px}
+.production .row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.production button.danger{color:#b42338;border-color:#efb5bf;background:#fff5f6}
+.production button.danger:hover:not(:disabled){background:#ffe4e8}
+.production .schedule-table-card input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#753bbd}
+.production .schedule-table-card>.row-actions{margin:12px 0}
+.production .schedule-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.production .schedule-date-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.production .schedule-primary-actions{margin-left:auto;align-items:center}
+.production .schedule-secondary-actions,.production .schedule-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:18px 0}
+.production .schedule-secondary-actions select{min-width:90px}
+.production .button-link{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border:1px solid #dfd9e8;border-radius:9px;background:#fff;color:#352c44;cursor:pointer;font-size:14px;text-decoration:none}
+.production .import-file{position:relative;overflow:hidden}
+.production .import-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.production .import-file:focus-within{outline:3px solid #a886d7;outline-offset:2px}
+.production .import-review{padding:16px;margin:16px 0;background:#f4effb;border-radius:10px}
+.production .import-review p{overflow-wrap:anywhere}
+.production .schedule-table-card td input:not([type=checkbox]),.production .schedule-table-card td select{min-width:150px;max-width:260px}
+.production .schedule-pagination button{min-width:36px}
+.production .studio-timeline{min-width:1800px;table-layout:fixed}
+.production .studio-timeline th:first-child{width:160px;position:sticky;left:0;background:#faf8fd;z-index:1}
+.production .studio-timeline td{overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.production .studio-timeline td.occupied{background:#eee7fb;color:#593394}
+.production .studio-timeline td.published{background:#daf3e6;color:#1e6747}
+.production .availability-grid button{width:100%;font-size:12px;min-width:84px;padding:8px 4px;user-select:none}
+.production .availability-grid button.selected{background:#753bbd;color:#fff}
+.production .availability-grid button.approved{background:#daf3e6;color:#1e6747;opacity:1}
+.production .availability-grid button.pending{background:#fff1cf;color:#785213;opacity:1}
+.production .check-label{display:flex;align-items:center;gap:10px;margin:14px 0}
+.production .check-label input{width:auto}
+.production .status.published{background:#daf3e6;color:#1e6747}
+.production .status.draft{background:#eee7fb;color:#593394}
+.production button:focus-visible{outline:3px solid #a886d7;outline-offset:2px}
+@media(max-width:700px){
+ .production nav{gap:8px}
+ .production .nav-group{display:flex;align-items:center;gap:4px}
+ .production .nav-section-label{white-space:nowrap;margin:0 6px 0 12px}
+ .production .schedule-filters{grid-template-columns:1fr 1fr}
+}

@@ -98,11 +98,22 @@ After the preview URL exists, add its exact `/recovery` URL to the **testing** S
 - Actual duration, rate snapshots and daily XLSX totals agree.
 - Refresh/relogin preserves saved data. Test concurrent users before release.
 
+## Edit and delete management (migration 202609190006)
+
+Run `supabase/migrations/202609190006_production_management.sql` on the staging project after migration 005, then refresh the preview.
+
+- Quota tracker: Sales/Super Admin can edit quotations; quota/period must cover existing active sessions. Brand/platform changes require no linked sessions.
+- Deleting a quotation permanently removes **all** linked sessions and checks across every location/date, including completed sessions. Derived logbook hours and cost disappear. The UI requires explicit confirmation; no undo is provided. Export records before deleting real history.
+- Master Brand/Studio: Super Admin can edit/delete. Referenced masters cannot be deleted. Used Shop IDs and used studio locations cannot change; capacity cannot be reduced below an occupied lane. Brand renames propagate to quotations.
+- Schedule Delete mode: select visible rows or select all (maximum 1000), then confirm. Only visible selected rows are submitted. Managers can delete only within their own city; the whole request fails if any ID is missing or unauthorized. Checks are removed and quotation allocation is released.
+- Mutations are transactional and audited. Audit records are not a complete backup of deleted checklists. No live data is deleted by installing the migration.
+- UAT: exercise edit/cancel, blocked in-use master deletion, quota/date validation, deselect/select-all, filter changes while selected, cancel confirmation, cross-city denial, and logbook refresh after delete.
+
 ## Known limits and release gate
 
 - Enabler-style table/timeline is an initial implementation, not a pixel-identical replica; original Enabler screens/source were not available in this repository.
 - Whole-hour planning. Split midnight into separate dates; minute-level actual host duration is supported.
-- No quotation revision/carryover workflow yet. Cancel future sessions to release quota; historical corrections require a separately designed audit workflow.
+- No quotation versioning/carryover workflow yet. Editing updates the existing record; delete is permanent and requires care with completed sessions.
 - Host Manager scope is city/location, not arbitrary subteams. All hosts in that location belong to the approval queue for now.
 - Reminders, scheduled auto-export/email, automatic best-hour analytics and Fase 2/3 integrations are not part of this implementation.
 - Checks are immutable through the UI. Host checklist combines readiness confirmation and end-of-session actual duration; split preflight vs checkout can be added after UAT.

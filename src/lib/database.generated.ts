@@ -21,6 +21,7 @@ schedule_publications: { Row: { id: string; location_id: string; week_start: str
 schedule_signals: { Row: { location_id: string; revision: number }; Insert: never; Update: never; Relationships: [] };
 }; Views: {}; Functions: {
 production_action_v2: { Args: { p_action: string; p_payload: Json }; Returns: Json };
+production_manage: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 calculate_operator_cost: { Args: { p_location: string | null; p_start: string; p_end: string }; Returns: Json };
 publish_schedule_week: { Args: { p_location: string | null; p_week: string }; Returns: string };
 submit_partial_availability: { Args: { p_slots: Json }; Returns: string };

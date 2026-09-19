@@ -15,6 +15,10 @@
 .production details{border-top:1px solid #e7e2ee;padding:16px 0}
 .production summary{cursor:pointer;font-weight:600;margin-bottom:12px}
 .production .row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.production button.danger{color:#b42338;border-color:#efb5bf;background:#fff5f6}
+.production button.danger:hover:not(:disabled){background:#ffe4e8}
+.production .schedule-table-card input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#753bbd}
+.production .schedule-table-card>.row-actions{margin:12px 0}
 .production .studio-timeline{min-width:1800px;table-layout:fixed}
 .production .studio-timeline th:first-child{width:160px;position:sticky;left:0;background:#faf8fd;z-index:1}
 .production .studio-timeline td{overflow:hidden;text-overflow:ellipsis;font-size:11px}

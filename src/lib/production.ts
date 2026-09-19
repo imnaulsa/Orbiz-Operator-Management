@@ -12,8 +12,9 @@ export async function productionSnapshot(location:string|null,start:string,end:s
 }
 export async function productionAction(action:string,payload:Record<string,Json|undefined>){
  const management=['quotation_edit','quotation_delete','brand_edit','brand_delete','studio_edit','studio_delete','sessions_delete'].includes(action);
- const {data,error}=await db().rpc(management?'production_manage':'production_action_v2',{p_action:action,p_payload:payload});
- if(error)throw error;return data as {id?:string;created?:number;remaining?:number;assigned?:number};
+ const batch=['schedule_import','schedule_publish','schedule_edit'].includes(action);
+ const {data,error}=await db().rpc(batch?'production_schedule_tools':management?'production_manage':'production_action_v2',{p_action:action,p_payload:payload});
+ if(error)throw error;return data as {id?:string;created?:number;remaining?:number;assigned?:number;imported?:number;published?:number};
 }
 export function parseHours(value:string){
  const hours=value.split(',').map(s=>s.trim()).filter(Boolean).map(Number);

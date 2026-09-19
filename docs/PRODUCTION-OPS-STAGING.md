@@ -109,6 +109,20 @@ Run `supabase/migrations/202609190006_production_management.sql` on the staging 
 - Mutations are transactional and audited. Audit records are not a complete backup of deleted checklists. No live data is deleted by installing the migration.
 - UAT: exercise edit/cancel, blocked in-use master deletion, quota/date validation, deselect/select-all, filter changes while selected, cancel confirmation, cross-city denial, and logbook refresh after delete.
 
+## Schedule tools (migration 202609190007)
+
+Run `supabase/migrations/202609190007_schedule_tools.sql` on staging after migration 006, then refresh Deploy Preview #2.
+
+- Studio Timeline has its own tab, location selector, and date. Plotting contains only planning forms.
+- Opening Jadwal Livestreaming defaults to today in WIB. Monthly immediately selects day 1 through month end; past sessions are visible when included in the selected range.
+- Default page size 10; options 20, 50, 100 and numbered navigation. Filters apply before pagination. Delete selections persist across pages, and changing a filter clears them.
+- Refresh shares a toolbar with Edit, Publish All, Delete (in that order). Edit mode opens inline location/studio/searchable-host fields. Saving a published session revalidates host fees and operator coverage; access is checked against both source and target city.
+- Template: `public/templates/livestream-schedule.xlsx`. Fill the Jadwal sheet from row 2; see Panduan. Supported import format is `.xlsx`, maximum 5 MB / 500 records; save legacy `.xls` as `.xlsx` first. Formulas are rejected. Import inserts drafts only and never overwrites existing sessions. Errors identify the Excel row; any error rolls back the whole import.
+- Export includes every matching row across all pages, as `.xlsx`. Columns: date, quotation reference, brand, platform, location, studio, start/end hour, host, optional Host ID, status, Session ID. Dates and hours are numeric Excel cells; identifiers remain text. Exporting does not expose fee/rate columns. Status/Session ID are informational, not import updates.
+- Publish All includes all filtered drafts across pages (maximum 1000). Confirmation states the count/scope. Host availability, rate, and published operator coverage are required. One failure rolls back the whole batch. Already-published IDs are skipped on retry.
+- Local tests cover calendar boundaries, paging/selection, import parsing rules, workbook output, authorization, atomic import/publish failure, duplicate prevention, quota and published edit fee preservation. Browser cloud could not access the local dev server; complete interactive UAT on staging after migration.
+- Optional local UI fixture: start Vite on loopback and open `/tests/schedule-preview.html`; it uses sample data and never calls mutation RPCs. The fixture is not included in the production build.
+
 ## Known limits and release gate
 
 - Enabler-style table/timeline is an initial implementation, not a pixel-identical replica; original Enabler screens/source were not available in this repository.

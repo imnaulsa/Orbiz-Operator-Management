@@ -19,6 +19,19 @@
 .production button.danger:hover:not(:disabled){background:#ffe4e8}
 .production .schedule-table-card input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#753bbd}
 .production .schedule-table-card>.row-actions{margin:12px 0}
+.production .schedule-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.production .schedule-date-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.production .schedule-primary-actions{margin-left:auto;align-items:center}
+.production .schedule-secondary-actions,.production .schedule-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:18px 0}
+.production .schedule-secondary-actions select{min-width:90px}
+.production .button-link{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border:1px solid #dfd9e8;border-radius:9px;background:#fff;color:#352c44;cursor:pointer;font-size:14px;text-decoration:none}
+.production .import-file{position:relative;overflow:hidden}
+.production .import-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.production .import-file:focus-within{outline:3px solid #a886d7;outline-offset:2px}
+.production .import-review{padding:16px;margin:16px 0;background:#f4effb;border-radius:10px}
+.production .import-review p{overflow-wrap:anywhere}
+.production .schedule-table-card td input:not([type=checkbox]),.production .schedule-table-card td select{min-width:150px;max-width:260px}
+.production .schedule-pagination button{min-width:36px}
 .production .studio-timeline{min-width:1800px;table-layout:fixed}
 .production .studio-timeline th:first-child{width:160px;position:sticky;left:0;background:#faf8fd;z-index:1}
 .production .studio-timeline td{overflow:hidden;text-overflow:ellipsis;font-size:11px}

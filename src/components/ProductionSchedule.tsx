@@ -1,8 +1,8 @@
 import {useState,type ReactNode} from 'react';
 import {hourLabel,prettyDate,today} from '../lib/domain';
 import {errorText} from '../lib/supabase';
-import {filterSchedule,schedulePage,selectedSchedule,type CalendarMode,type ScheduleFilters} from '../lib/schedule';
-import type {LiveSession} from '../lib/production';
+import {filterSchedule,schedulePage,selectedSchedule,scheduleSummary,matchingQuotations,resolveImport,type CalendarMode,type ScheduleFilters} from '../lib/schedule';
+import {productionSnapshot,type LiveSession,type Quotation} from '../lib/production';
 import type {ImportScheduleRow} from '../lib/scheduleExcel';
 import {LiveCheckForm,LocationField,type Ctx} from './ProductionWorkspace';
 
@@ -41,6 +41,7 @@ export function ScheduleTablePage(c:Props){
  const [page,setPage]=useState(1),[size,setSize]=useState(10),[mode,setMode]=useState<'view'|'edit'|'delete'>('view');
  const [selected,setSelected]=useState<Set<string>>(()=>new Set()),[check,setCheck]=useState<LiveSession|null>(null);
  const [importRows,setImportRows]=useState<ImportScheduleRow[]>([]),[fileError,setFileError]=useState(''),[reading,setReading]=useState(false);
+ const [importQuotes,setImportQuotes]=useState<Quotation[]>([]),[choices,setChoices]=useState<Record<number,string>>({});
  const manager=['super_admin','operator_manager','host_manager'].includes(c.profile.role);
  const rows=filterSchedule(c.data,filters),pagination=schedulePage(rows,page,size),selectedRows=selectedSchedule(rows,selected);
  const drafts=rows.filter(s=>s.status==='draft'),working=c.busy||reading;
@@ -57,7 +58,19 @@ export function ScheduleTablePage(c:Props){
  }
  async function readFile(file:File){
   setReading(true);setFileError('');setImportRows([]);
-  try{const {readScheduleFile}=await import('../lib/scheduleExcel');setImportRows(await readScheduleFile(file))}catch(e){setFileError(errorText(e))}finally{setReading(false)}
+  try{
+   const {readScheduleFile}=await import('../lib/scheduleExcel'),parsed=await readScheduleFile(file);
+   const dates=parsed.map(r=>r.date).sort();
+   if(Date.parse(dates[dates.length-1])-Date.parse(dates[0])>366*86400000)throw new Error('Pisahkan file import menjadi rentang maksimal 367 hari.');
+   const snapshot=await productionSnapshot(c.profile.role==='super_admin'?null:c.location,dates[0],dates[dates.length-1]);
+   setImportQuotes(snapshot.quotations);setChoices({});setImportRows(parsed);
+  }catch(e){setFileError(errorText(e))}finally{setReading(false)}
+ }
+ let importProblem='';
+ try{if(importRows.length)resolveImport(importRows,importQuotes,choices)}catch(e){importProblem=errorText(e)}
+ async function confirmImport(){
+  setFileError('');
+  try{const rows=resolveImport(importRows,importQuotes,choices);if(await c.act('schedule_import',{rows}))setImportRows([])}catch(e){setFileError(errorText(e))}
  }
  async function exportRows(){
   setReading(true);setFileError('');
@@ -82,8 +95,10 @@ export function ScheduleTablePage(c:Props){
     </>}</div>
    </div>
    {fileError&&<div className="notice error" role="alert">{fileError}</div>}
-   {manager&&importRows.length>0&&<div className="import-review"><h3>Review import · {importRows.length} sesi</h3><p>Import menambah draft baru. Tanggal/jam harus mendatang, quotation dan master sudah tersedia. Duplikat/bentrok atau baris tidak valid membatalkan seluruh import.</p><p>{importRows.slice(0,5).map(r=>`${r.date} ${hourLabel(r.start)}–${hourLabel(r.end)} · ${r.brand} · ${r.studio}`).join(' / ')}{importRows.length>5?' …':''}</p>
-    <button className="primary" disabled={working} onClick={()=>void c.act('schedule_import',{rows:importRows}).then(ok=>{if(ok)setImportRows([])})}>Import {importRows.length} draft</button><button disabled={working} onClick={()=>setImportRows([])}>Batal import</button>
+   {manager&&importRows.length>0&&<div className="import-review"><h3>Review import · {importRows.length} sesi</h3><p>Quotation dicocokkan dari brand, platform, dan tanggal. Pilih periode jika ada beberapa pilihan. Jika belum tersedia, minta Admin Sales membuat quotation, lalu unggah ulang. Kuota dan bentrok diperiksa kembali saat menyimpan; satu baris gagal membatalkan seluruh import.</p>
+    <div className="table-wrap" style={{maxHeight:360,overflow:'auto'}}><table><thead><tr><th>Baris</th><th>Tanggal / Jam</th><th>Brand / Platform</th><th>Lokasi / Studio</th><th>Periode quotation / sisa kuota</th></tr></thead><tbody>{importRows.map(r=>{const candidates=matchingQuotations(r,importQuotes);return <tr key={r.row}><td>{r.row}</td><td>{r.date}<br/>{hourLabel(r.start)}–{hourLabel(r.end)}</td><td>{r.brand}<br/>{r.platform}</td><td>{r.location}<br/>{r.studio}</td><td>{!candidates.length?'Quotation belum tersedia':<select aria-label={`Quotation baris ${r.row}`} value={choices[r.row]??(candidates.length===1?candidates[0].id:'')} disabled={working} onChange={e=>setChoices(old=>({...old,[r.row]:e.target.value}))}><option value="">Pilih periode quotation</option>{candidates.map(q=><option key={q.id} value={q.id}>{q.period_start} – {q.period_end} · {q.hours-q.allocated_hours} jam · {q.reference}</option>)}</select>}</td></tr>})}</tbody></table></div>
+    {importProblem&&<p role="alert">{importProblem}</p>}
+    <button className="primary" disabled={working||!!importProblem} onClick={()=>void confirmImport()}>Import {importRows.length} draft</button><button disabled={working} onClick={()=>setImportRows([])}>Batal import</button>
    </div>}
    {manager&&mode==='delete'&&<div className="row-actions"><button disabled={working||!rows.length||rows.length>1000} onClick={()=>setSelected(new Set(rows.map(s=>s.id)))}>Pilih semua hasil filter</button><button disabled={working} onClick={()=>setSelected(new Set())}>Kosongkan pilihan</button><button className="danger" disabled={working||!selectedRows.length||selectedRows.length>1000} onClick={()=>void remove()}>Hapus terpilih ({selectedRows.length})</button><small>Pilihan tetap tersimpan antarhalaman; ganti filter akan mengosongkan pilihan.</small></div>}
    {mode==='edit'&&<p className="muted">Ubah lokasi, studio, atau host langsung pada baris, lalu Save. Sesi yang sudah berjalan/tercatat tidak dapat diedit.</p>}
@@ -107,6 +122,19 @@ export function ScheduleTablePage(c:Props){
     <button disabled={working||pagination.current===pagination.pages} onClick={()=>setPage(pagination.current+1)}>Berikutnya</button>
    </div></div><p className="muted">Export dan Publish All mengikuti seluruh hasil filter, termasuk halaman lain. Publish All maksimal 1000 draft; import maksimal 500 baris per file .xlsx.</p>
   </section>{check&&<LiveCheckForm c={c} session={check} close={()=>setCheck(null)}/>}</>;
+}
+
+export function ScheduleSummaryPage(c:Props){
+ const [filters,setFilters]=useState<ScheduleFilters>({location:'all',platform:'all',brand:'all',host:'all'});
+ const rows=scheduleSummary(filterSchedule(c.data,filters),c.data);
+ return <><ScheduleDateToolbar c={c}/><section className="card"><h2>Ringkasan Jadwal</h2>
+  <div className="form-grid"><label>Lokasi<select value={filters.location} onChange={e=>setFilters({...filters,location:e.target.value})}><option value="all">Semua</option><option value="jakarta">Jakarta</option><option value="bandung">Bandung</option></select></label>
+   <label>Platform<select value={filters.platform} onChange={e=>setFilters({...filters,platform:e.target.value})}><option value="all">Semua</option><option>TikTok</option><option>Shopee</option><option>Mirror</option></select></label>
+   <label>Brand<select value={filters.brand} onChange={e=>setFilters({...filters,brand:e.target.value})}><option value="all">Semua</option>{c.data.brands.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label></div>
+  <p>{c.start} – {c.end} · <strong>{rows.reduce((n,r)=>n+r.hours,0)} jam</strong> · {rows.reduce((n,r)=>n+r.sessions,0)} sesi</p>
+  <div className="table-wrap"><table><thead><tr><th>Brand</th><th>Platform</th><th>Lokasi</th><th>Total Jam Terjadwal</th></tr></thead><tbody>{rows.map(r=><tr key={r.key}><td>{r.brand}</td><td>{r.platform}</td><td>{r.location}</td><td>{r.hours}</td></tr>)}</tbody></table></div>
+  {!rows.length&&<p className="empty">Belum ada jadwal pada filter ini.</p>}<p className="muted">Mencakup draft dan published. Sesi dibatalkan tidak dihitung. Mirror dihitung satu kali sesuai durasi sesi. Ini jam terjadwal, bukan jam aktual logbook.</p>
+ </section></>;
 }
 
 function SessionPlacement({c,session:s}:{c:Ctx;session:LiveSession}){

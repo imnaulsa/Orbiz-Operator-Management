@@ -2,11 +2,11 @@ import {unzipSync,strFromU8} from 'fflate';
 import {logbookWorkbook} from './xlsx';
 import type {LiveSession,ProductionData} from './production';
 
-export const scheduleHeaders=['Tanggal','Quotation','Brand','Platform','Lokasi','Studio','Jam Mulai','Jam Selesai','Host','Host ID'];
-export type ImportScheduleRow={row:number;date:string;quotation:string;brand:string;platform:string;location:string;studio:string;start:number;end:number;host:string;host_id:string};
+export const scheduleHeaders=['Tanggal','Brand','Platform','Lokasi','Studio','Jam Mulai','Jam Selesai','Host','Host ID'];
+export type ImportScheduleRow={row:number;date:string;brand:string;platform:string;location:string;studio:string;start:number;end:number;host:string;host_id:string};
 type Cell=string|number;
 export function parseScheduleGrid(grid:Cell[][],date1904=false):ImportScheduleRow[]{
- if(!grid.length||scheduleHeaders.slice(0,9).some((h,i)=>String(grid[0]?.[i]??'').trim()!==h))throw new Error('Header tidak sesuai. Gunakan Template Excel, sheet Jadwal, tanpa mengubah urutan kolom.');
+ if(!grid.length||scheduleHeaders.slice(0,8).some((h,i)=>String(grid[0]?.[i]??'').trim()!==h))throw new Error('Header tidak sesuai. Unduh Template Excel terbaru, sheet Jadwal, tanpa mengubah urutan kolom.');
  const output:ImportScheduleRow[]=[];
  for(let i=1;i<grid.length;i++){
   const cells=grid[i]??[];if(!cells.some(v=>String(v??'').trim()))continue;
@@ -19,14 +19,14 @@ export function parseScheduleGrid(grid:Cell[][],date1904=false):ImportScheduleRo
    }
    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)throw new Error('Tanggal harus yyyy-mm-dd atau sel tanggal Excel');
    const hour=(n:number)=>{const v=text(n);if(!v)throw new Error('Jam wajib diisi');const m=/^(\d{1,2}):00(?::00)?$/.exec(v);const h=m?Number(m[1]):Number(v);if(!Number.isInteger(h))throw new Error('Jam harus bulat, misalnya 9 atau 09:00');return h};
-   const start=hour(6),end=hour(7);if(start<0||start>23||end<1||end>24||end<=start)throw new Error('Rentang jam tidak valid (mulai 0–23, selesai 1–24)');
-   if([1,2,3,4,5].some(n=>!text(n)))throw new Error('Quotation, brand, platform, lokasi, dan studio wajib diisi');
-   if(!['tiktok','shopee','mirror'].includes(text(3).toLowerCase()))throw new Error('Platform harus TikTok, Shopee, atau Mirror');
-   output.push({row:i+1,date,quotation:text(1),brand:text(2),platform:text(3),location:text(4).toLowerCase(),studio:text(5),start,end,host:text(8),host_id:text(9)});
+   const start=hour(5),end=hour(6);if(start<0||start>23||end<1||end>24||end<=start)throw new Error('Rentang jam tidak valid (mulai 0–23, selesai 1–24)');
+   if([1,2,3,4].some(n=>!text(n)))throw new Error('Brand, platform, lokasi, dan studio wajib diisi');
+   if(!['tiktok','shopee','mirror'].includes(text(2).toLowerCase()))throw new Error('Platform harus TikTok, Shopee, atau Mirror');
+   output.push({row:i+1,date,brand:text(1),platform:text(2),location:text(3).toLowerCase(),studio:text(4),start,end,host:text(7),host_id:text(8)});
   }catch(e){throw new Error(`Baris ${i+1}: ${e instanceof Error?e.message:String(e)}`)}
  }
  if(!output.length||output.length>500)throw new Error('Isi 1–500 baris jadwal per import.');
- const seen=new Set<string>();for(const r of output){const key=[r.quotation,r.date,r.start,r.end].join('|');if(seen.has(key))throw new Error(`Baris ${r.row}: sesi duplikat dalam file.`);seen.add(key)}
+ const seen=new Set<string>();for(const r of output){const key=[r.brand.toLowerCase(),r.platform.toLowerCase(),r.date,r.start,r.end].join('|');if(seen.has(key))throw new Error(`Baris ${r.row}: sesi duplikat dalam file.`);seen.add(key)}
  return output;
 }
 
@@ -63,7 +63,7 @@ export function readScheduleWorkbook(bytes:Uint8Array):ImportScheduleRow[]{
    let val:Cell=t==='inlineStr'?tags(c,'t').map(t=>t.textContent??'').join(''):t==='s'?strings[Number(v)]??'':t==='str'||t==='d'?v:v===''?'':Number(v);
    if(t==='e')throw new Error(`Sel ${address}: mengandung error Excel.`);
    if(t==='d'&&index===0)val=String(val).slice(0,10);
-   if((index===6||index===7)&&typeof val==='number'&&(timeStyles[Number(c.getAttribute('s')??0)]||(val>0&&val<1)))val=Number((val*24).toFixed(8));
+   if((index===5||index===6)&&typeof val==='number'&&(timeStyles[Number(c.getAttribute('s')??0)]||(val>0&&val<1)))val=Number((val*24).toFixed(8));
    cells[index]=val;
   }
   grid[r-1]=cells;
@@ -77,7 +77,7 @@ export async function readScheduleFile(file:File){
 }
 export function scheduleExportRows(sessions:LiveSession[],data:ProductionData):Cell[][]{
  const qs=new Map(data.quotations.map(q=>[q.id,q])),studios=new Map(data.studios.map(s=>[s.id,s])),hosts=new Map(data.hosts.map(h=>[h.id,h]));
- return sessions.map(s=>{const q=qs.get(s.quotation_id);return [Date.parse(s.work_date+'T00:00:00Z')/86400000+25569,q?.reference??'',q?.brand??'',q?.platform??'',s.location_id,studios.get(s.studio_id)?.name??'',s.start_hour,s.end_hour,hosts.get(s.host_id??'')?.display_name??'',s.host_id??'',s.status,s.id]});
+ return sessions.map(s=>{const q=qs.get(s.quotation_id);return [Date.parse(s.work_date+'T00:00:00Z')/86400000+25569,q?.brand??'',q?.platform??'',s.location_id,studios.get(s.studio_id)?.name??'',s.start_hour,s.end_hour,hosts.get(s.host_id??'')?.display_name??'',s.host_id??'',s.status,s.id]});
 }
 export function exportSchedule(sessions:LiveSession[],data:ProductionData,filename:string){
  const bytes=logbookWorkbook(scheduleExportRows(sessions,data),[...scheduleHeaders,'Status','Session ID'],'Jadwal',[0]);

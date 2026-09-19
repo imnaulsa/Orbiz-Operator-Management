@@ -17,9 +17,9 @@ function Fixture(){
   try{
    const blank=new Uint8Array(await (await fetch('/templates/livestream-schedule.xlsx')).arrayBuffer());
    try{readScheduleWorkbook(blank);throw new Error('Blank template should fail')}catch(e){if(!(e instanceof Error)||!e.message.includes('1–500'))throw e}
-   const bytes=logbookWorkbook([['2099-01-01','001','Test Brand','Mirror','jakarta','Studio Test',9,11,'','']],scheduleHeaders,'Jadwal');
-   const result=readScheduleWorkbook(bytes);if(result[0].quotation!=='001'||result[0].end!==11)throw new Error('Round-trip mismatch');
-   setNotice('Excel parser PASS: template headers, empty template, round-trip, duration, quotation ID');
+   const bytes=logbookWorkbook([['2099-01-01','Test Brand','Mirror','jakarta','Studio Test',9,11,'','']],scheduleHeaders,'Jadwal');
+   const result=readScheduleWorkbook(bytes);if(result[0].brand!=='Test Brand'||result[0].end!==11)throw new Error('Round-trip mismatch');
+   setNotice('Excel parser PASS: template headers, empty template, round-trip, duration, brand');
   }catch(e){setNotice(`FAIL: ${String(e)}`)}
  }
  return <div className="production"><main className="workspace"><h1>Local schedule UI fixture</h1><p role="status">{notice}</p><button onClick={()=>setTimeline(v=>!v)}>{timeline?'Jadwal':'Studio Timeline'}</button><button onClick={()=>void testExcel()}>Uji parser Excel</button>{timeline?<StudioTimelinePage {...c} calendar={{mode,change:(m,d,e)=>{setMode(m);setRange(scheduleRange(m,d,e))},refresh:()=>{}}}/>:<ScheduleTablePage key={range.start+range.end} {...c} calendar={{mode,change:(m,d,e)=>{setMode(m);setRange(scheduleRange(m,d,e))},refresh:()=>{}}}/>}</main></div>

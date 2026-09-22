@@ -6,7 +6,7 @@ import {unzipSync,strFromU8} from 'fflate';
 import type {ProductionData,LiveSession} from '../src/lib/production';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {ScheduleTablePage} from '../src/components/ProductionSchedule';
+import {ScheduleTablePage,SessionPlacement,PublishReview} from '../src/components/ProductionSchedule';
 import type {Ctx} from '../src/components/ProductionWorkspace';
 const row=['2099-01-01','Brand A','Mirror','jakarta','Studio A',9,11,''];
 describe('schedule calendar and pagination',()=>{
@@ -90,3 +90,23 @@ describe('schedule Excel import/export',()=>{
   expect(parseScheduleGrid([scheduleHeaders,rows[0]])[0].brand).toBe('=Brand');
  });
 });
+
+ describe('staged schedule publication UI',()=>{
+ const c={data:{sessions:[{id:'s',quotation_id:'q',studio_id:'st',location_id:'jakarta',work_date:'2099-01-01',start_hour:9,end_hour:11,status:'published',host_id:'h2',host_published:true}],quotations:[{id:'q',brand_id:'b',brand:'Brand A',platform:'TikTok'}],brands:[],studios:[{id:'st',name:'Studio A',location_id:'jakarta'}],hosts:[{id:'h1',display_name:'Ade',active:true,location_id:'jakarta'},{id:'h2',display_name:'Elvira',active:true,location_id:'jakarta'}],checks:[]},profile:{id:'h1',role:'host'},start:'2099-01-01',end:'2099-01-01',location:'jakarta',busy:false} as unknown as Ctx;
+ it('host and operator receive read-only controls and host cannot check a peer session',()=>{
+  for(const role of ['host','staff']){
+   const html=renderToStaticMarkup(createElement(ScheduleTablePage,{...c,profile:{...c.profile,role} as Ctx['profile'],calendar:{mode:'daily',change:()=>{},refresh:()=>{}}}));
+   expect(html).not.toContain('>Edit</button>');expect(html).not.toContain('Import Excel');expect(html).not.toContain('Publish All');
+   if(role==='host'){expect(html).toContain('Semua Jadwal');expect(html).toContain('Jadwal Saya');expect(html).not.toContain('>Check</button>')}
+  }
+ });
+ it('host editing has separate search and actual select with ID option values',()=>{
+  const html=renderToStaticMarkup(createElement('table',{},createElement('tbody',{},createElement('tr',{},createElement(SessionPlacement,{c,session:c.data.sessions[0],onDirty:()=>{}})))));
+  expect(html.indexOf('aria-label="Cari host"')).toBeLessThan(html.indexOf('aria-label="Pilih host"'));
+  expect(html).toContain('<option value="h1">Ade</option>');expect(html).not.toContain('<datalist');expect(html).toContain('class="host-save"');
+ });
+ it('publish confirmation explains pending changes and offers Cancel and Publish All',()=>{
+  const html=renderToStaticMarkup(createElement(PublishReview,{busy:false,count:3,onCancel:()=>{},onPublish:()=>{},error:'Kapasitas penuh'}));
+  expect(html).toContain('harus dipublish dulu');expect(html).toContain('>Cancel</button>');expect(html).toContain('Publish All (3)');expect(html).toContain('Kapasitas penuh');
+ });
+ });

@@ -63,3 +63,9 @@
  .production .nav-section-label{white-space:nowrap;margin:0 6px 0 12px}
  .production .schedule-filters{grid-template-columns:1fr 1fr}
 }
+
+.production .host-placement{display:flex;flex-direction:column;gap:5px;min-width:190px}
+.production .host-placement .host-save{align-self:flex-start;margin-top:0}
+.production .host-publication-label{display:block;margin-top:5px;color:var(--muted)}
+.production .publish-review-dialog{max-width:540px;width:calc(100% - 32px);border:1px solid #dfd9e8;border-radius:14px;padding:24px;color:#352c44}
+.production .publish-review-dialog::backdrop{background:rgb(30 20 45 / 45%)}

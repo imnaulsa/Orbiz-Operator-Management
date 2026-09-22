@@ -9,7 +9,8 @@ host_leaves: { Row: { id: string; host_id: string; location_id: string; work_dat
 host_rates: { Row: { id: string; host_id: string; location_id: string; effective_date: string; hourly_fee: number; created_by: string }; Insert: never; Update: never; Relationships: [] };
 leave_requests: { Row: { id: string; operator_id: string; location_id: string; starts_at: string; ends_at: string; leave_type: string; reason: string; status: Database['public']['Enums']['review_status']; submitted_at: string; reviewed_by: string | null; reviewed_at: string | null; review_note: string | null }; Insert: never; Update: never; Relationships: [] };
 live_checks: { Row: { id: string; session_id: string; location_id: string; kind: string; submitted_by: string; answers: Json; note: string; actual_start: string | null; actual_end: string | null; created_at: string }; Insert: never; Update: never; Relationships: [] };
-live_sessions: { Row: { id: string; location_id: string; quotation_id: string; studio_id: string; lane: number; work_date: string; start_hour: number; end_hour: number; host_id: string | null; host_fee: number | null; status: string; created_by: string; created_at: string }; Insert: never; Update: never; Relationships: [] };
+live_session_edits: { Row: { session_id: string; location_id: string; studio_id: string; host_id: string | null; version: string; updated_by: string; updated_at: string }; Insert: never; Update: never; Relationships: [] };
+live_sessions: { Row: { id: string; location_id: string; quotation_id: string; studio_id: string; lane: number; work_date: string; start_hour: number; end_hour: number; host_id: string | null; host_fee: number | null; status: string; created_by: string; created_at: string; host_published: boolean }; Insert: never; Update: never; Relationships: [] };
 locations: { Row: { id: string; name: string }; Insert: never; Update: never; Relationships: [] };
 operator_rates: { Row: { id: string; operator_id: string; location_id: string; effective_date: string; hourly_fee: number; created_by: string; created_at: string }; Insert: never; Update: never; Relationships: [] };
 production_brands: { Row: { id: string; name: string; shop_id_tiktok: string | null; shop_id_shopee: string | null; shop_id_mirror: string | null; active: boolean; created_by: string; created_at: string }; Insert: never; Update: never; Relationships: [] };
@@ -20,7 +21,6 @@ schedule_assignments: { Row: { id: string; operator_id: string; location_id: str
 schedule_publications: { Row: { id: string; location_id: string; week_start: string; version: number; published_by: string; published_at: string }; Insert: never; Update: never; Relationships: [] };
 schedule_signals: { Row: { location_id: string; revision: number }; Insert: never; Update: never; Relationships: [] };
 }; Views: {}; Functions: {
-production_action_v2: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 production_manage: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 production_schedule_tools: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 calculate_operator_cost: { Args: { p_location: string | null; p_start: string; p_end: string }; Returns: Json };
@@ -34,7 +34,8 @@ copy_schedule_day: { Args: { p_location: string | null; p_source: string; p_targ
 get_overlapping_colleagues: { Args: { p_start: string; p_end: string }; Returns: {work_date:string;hour:number;display_name:string}[] };
 add_operator_rate: { Args: { p_operator: string; p_effective: string; p_fee: number }; Returns: string };
 production_snapshot: { Args: { p_location: string | null; p_start: string; p_end: string }; Returns: Json };
-production_action: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 manage_account: { Args: { p_id: string; p_name: string; p_role: Database['public']['Enums']['app_role']; p_location: string | null; p_employment: Database['public']['Enums']['employment_type']; p_active: boolean; p_initial_fee?: number; p_effective?: string }; Returns: undefined };
 production_snapshot_v2: { Args: { p_location: string | null; p_start: string; p_end: string }; Returns: Json };
+production_action_v2: { Args: { p_action: string; p_payload: Json }; Returns: Json };
+production_action: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 }; Enums: {app_role: "super_admin" | "operator_manager" | "staff" | "host_manager" | "host" | "admin_sales"; assignment_layer: "draft" | "published"; employment_type: "internal" | "mitra"; review_status: "pending" | "approved" | "rejected"}; CompositeTypes: {} } };

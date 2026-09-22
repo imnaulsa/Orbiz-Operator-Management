@@ -6,7 +6,8 @@ await db.exec(`create role anon; create role authenticated; create schema auth;
 create table auth.users(id uuid primary key);
 create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 grant usage on schema auth,public to authenticated,anon; grant execute on function auth.uid() to authenticated,anon;`);
-for (const f of (await readdir('supabase/migrations')).sort()) await db.exec(await readFile('supabase/migrations/'+f,'utf8'));
+const migrationFiles=(await readdir('supabase/migrations')).sort();
+for (const f of migrationFiles.filter(f=>f<'202609220002')) await db.exec(await readFile('supabase/migrations/'+f,'utf8'));
 await db.exec(await readFile('supabase/seed.sql','utf8'));
 const ids = Array.from({length:6},(_,i)=>`00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`);
 for (const id of ids) await db.query('insert into auth.users values($1)',[id]);
@@ -113,6 +114,10 @@ await check('inactive token cannot mutate',()=>deny(3,'select public.submit_part
 await check('missing-profile token fails closed',async()=>assert.equal((await as('00000000-0000-4000-8000-999999999999','select * from public.profiles')).length,0));
 const {testProduction}=await import('./test-production-db.mjs');
 await testProduction({db,as,check,ids});
+// Validate the upgrade against populated data, then exercise the current publication rules.
+for (const f of migrationFiles.filter(f=>f>='202609220002')) await db.exec(await readFile('supabase/migrations/'+f,'utf8'));
+const {testStagedPublication}=await import('./test-staged-publication.mjs');
+await testStagedPublication({db,as,check,ids});
 // Generate types from the actual migrated catalog, including nullability and RPC arguments.
 const enums=(await db.query("select t.typname, e.enumlabel from pg_type t join pg_enum e on e.enumtypid=t.oid join pg_namespace n on n.oid=t.typnamespace where n.nspname='public' order by t.typname,e.enumsortorder")).rows;
 const enumMap={}; for(const e of enums)(enumMap[e.typname]??=[]).push(e.enumlabel);

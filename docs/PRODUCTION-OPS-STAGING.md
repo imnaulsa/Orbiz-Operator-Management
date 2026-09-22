@@ -145,3 +145,19 @@ Run `supabase/migrations/202609190007_schedule_tools.sql` on staging after migra
 - No migration has been executed against a hosted database by this change.
 
 Release only after UAT approval, backup/rollback preparation, and an explicit decision about legacy vs Production Operator logbook cutover. Remove the staging-only production build guard only in the reviewed release change.
+
+## Staged schedule and host publication — 22 September 2026
+
+Apply `supabase/migrations/202609220002_staged_publication.sql` to **Orbiz-Livestreaming-Staging** after `202609220001_manual_dates.sql`. This upgrades populated data and marks existing published host assignments as confirmed. The new migration is transactional; do not rerun older migrations after it. Production Supabase is not a target.
+
+Current flow:
+
+1. Plot/import drafts, then **Publish All** to make the schedule visible. Operator shifts and host assignments are optional for initial schedule publication.
+2. Operator Staff and Host can read all published sessions in their account location. They cannot edit, import, delete or publish. Host can switch **Semua Jadwal / Jadwal Saya**. Own schedules include confirmed assignments only.
+3. Host Manager can plot hosts onto existing drafts or published sessions. Automatic host placement also creates pending changes, and avoids reusing a host across overlapping pending assignments.
+4. **Publish Host** confirms assignments on already published schedules. Approved availability, absence/conflict checks and an effective host rate are still mandatory. Operator shifts are required only for the existing operator check/logbook workflow, not publication.
+5. Inline editing provides a search field above the host dropdown and 5 px spacing before Save. **Save** persists a proposal; the previously published studio, location, host and fee remain visible to staff. Capacity/availability are revalidated on publication, not reserved by an edit proposal.
+6. **Selesai edit** opens a publish dialog. Save unsaved row fields first. **Cancel** returns to editing and retains saved proposals. **Publish All** applies all saved proposals within the loaded date range, including other table pages/filters. Outside edit mode, Publish All and Publish Host follow the current table filters.
+7. Publication is atomic: one failed session leaves every other session and proposal unchanged. Review version checks reject edits changed by another manager. Published assignments and cost/logbook snapshots remain intact until publication succeeds.
+
+Verification: local PGlite migration upgrade and role/RPC tests, app unit/render tests, TypeScript and Vite build. Browser installation failed in this environment; authenticated hosted interaction remains a staging UAT step. The connected Supabase account did not list the Orbiz staging project, so hosted SQL was not applied by the agent.

@@ -17,6 +17,12 @@
 .production fieldset{border:0;padding:0;margin:0;min-width:0}
 .production fieldset>.form-grid+button,.production fieldset>label+button,.production fieldset>.form-grid+.row-actions{margin-top:10px}
 .production fieldset>button+button{margin-left:8px}
+.production .multi-date-picker{max-width:480px;margin:14px 0}
+.production .multi-date-picker>p{margin:10px 0}
+.production .multi-date-picker>.row-actions{margin-bottom:10px}
+.production .multi-date-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;text-align:center}
+.production .multi-date-grid>span{font-size:12px;color:var(--muted);padding:6px 0}
+.production .multi-date-grid>button{padding:8px 0;min-width:0}
 .production details{border-top:1px solid #e7e2ee;padding:16px 0}
 .production summary{cursor:pointer;font-weight:600;margin-bottom:12px}
 .production .row-actions{display:flex;gap:6px;flex-wrap:wrap}

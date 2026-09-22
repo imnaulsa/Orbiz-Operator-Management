@@ -22,6 +22,16 @@ export async function testProduction({db,as,check,ids}){
  const studio=(await call(1,'studio',{name:'Studio A',capacity:1})).id;
  const studioMirror=(await call(1,'studio',{name:'Studio Mirror',capacity:1})).id;
  const brand=(await callV2(0,'master_brand',{name:'Mirror Brand',tiktok:'TT-MIRROR',shopee:'SP-MIRROR',mirror:'ST-MIRROR'})).id;
+ await check('manual dates are unique and empty studio accepts October 2 through 10',async()=>{
+  const q=(await callV2('sales','quotation',{reference:'Q-DATE-REGRESSION',brand,platform:'Mirror',period_start:'2099-10-01',period_end:'2099-10-31',hours:60,rate:100000})).id;
+  const dates=Array.from({length:9},(_,i)=>`2099-10-${String(i+2).padStart(2,'0')}`);
+  const payload={location:'jakarta',quotation:q,studio:studioMirror,dates:[...dates,dates[0]],start:13,end:15,host:''};
+  const result=await callV2(1,'session_multi',payload);assert.equal(result.created,18);
+  const rows=(await snapV2(0,null,'2099-10-01','2099-10-31')).sessions.filter(s=>s.quotation_id===q);assert.equal(rows.length,9);
+  await assert.rejects(()=>callV2(1,'session_multi',{...payload,dates:['2099-10-11','2099-10-02']}),/2099-10-02/);
+  assert.equal((await snapV2(0,null,'2099-10-11','2099-10-11')).sessions.length,0);
+  await assert.rejects(()=>callV2(1,'session_multi',{...payload,dates:[]}),/Pilih/);
+ });
  const mirrorQuotation=(await callV2('sales','quotation',{reference:'QM',brand,platform:'Mirror',period_start:'2099-01-05',period_end:'2099-01-11',hours:6,rate:83333})).id;
  await callV2(1,'best_hour_slots',{location:'jakarta',quotation:mirrorQuotation,slots:[{start:8,end:10}]});
  await check('Mirror quotation uses ST mapping and stays general',async()=>{const data=await snapV2(0);const q=data.quotations.find(q=>q.id===mirrorQuotation);assert.equal(q.account,'ST-MIRROR');assert.equal(q.location_id,null);assert.equal(data.brands[0].shop_id_tiktok,'TT-MIRROR');assert.equal(data.brands[0].shop_id_shopee,'SP-MIRROR');});

@@ -128,6 +128,13 @@ Run `supabase/migrations/202609190007_schedule_tools.sql` on staging after migra
 
 ## Known limits and release gate
 
+### Manual date selection update
+
+- Run `202609220001_manual_dates.sql` in staging after migration 007. This replaces the planning RPC without modifying stored schedules.
+- Multi-date manual plotting now uses a clickable calendar with removable selected-date chips. Only selected dates are submitted; the anchor date is not automatically included.
+- The server deduplicates dates before checking capacity. Repeated dates previously reproduced a misleading capacity-full failure even when the studio was initially empty. Actual conflicts now identify studio, date and hours; drafts and published sessions both occupy capacity.
+- Verified locally: October 2–10, 13–15, produces nine sessions / 18 hours even with a repeated date in the payload. Actual conflicts still reject the entire batch and empty selections fail. The reported Fonterra staging data has not been inspected; this reproduction does not establish its exact cause.
+
 - Enabler-style table/timeline is an initial implementation, not a pixel-identical replica; original Enabler screens/source were not available in this repository.
 - Whole-hour planning. Split midnight into separate dates; minute-level actual host duration is supported.
 - No quotation versioning/carryover workflow yet. Editing updates the existing record; delete is permanent and requires care with completed sessions.

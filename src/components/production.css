@@ -1,3 +1,6 @@
+.production>.workspace{margin:0 auto;align-self:start;min-width:0}
+.production>.workspace>header{align-items:flex-start;min-height:64px}
+.production>.workspace>header h1{margin-bottom:0}
 .production nav button{text-align:left;border:0;background:transparent;width:100%;color:inherit;padding:12px 14px;border-radius:8px}
 .production nav button.selected{background:#ede5fb;color:#6c32b9;font-weight:700}
 .production nav{gap:14px;overflow-y:auto}

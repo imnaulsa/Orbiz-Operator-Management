@@ -9,12 +9,13 @@ alter table public.live_sessions
 
 create function private.live_session_identifiers() returns trigger
 language plpgsql security definer set search_path='' as $$
-declare shop text;
+declare shop text; serial_number bigint;
 begin
  if tg_op='UPDATE' then
   new.live_code:=old.live_code;
  else
-  new.live_code:='LS-'||to_char(new.work_date,'YY')||'-'||lpad(nextval('private.live_code_sequence'::regclass)::text,6,'0');
+  serial_number:=nextval('private.live_code_sequence'::regclass);
+  new.live_code:='LS-'||to_char(new.work_date,'YY')||'-'||lpad(serial_number::text,greatest(length(serial_number::text),6),'0');
  end if;
  select regexp_replace(upper(account),'[^A-Z0-9]','','g') into shop
  from public.production_quotations where id=new.quotation_id;
@@ -30,7 +31,7 @@ with numbered as (
  select id,row_number() over(order by work_date,created_at,id) as n
  from public.live_sessions
 )
-update public.live_sessions s set live_code='LS-'||to_char(s.work_date,'YY')||'-'||lpad(numbered.n::text,6,'0')
+update public.live_sessions s set live_code='LS-'||to_char(s.work_date,'YY')||'-'||lpad(numbered.n::text,greatest(length(numbered.n::text),6),'0')
 from numbered where numbered.id=s.id;
 select setval('private.live_code_sequence',greatest((select count(*) from public.live_sessions),1),
  (select count(*)>0 from public.live_sessions));

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 export async function testStagedPublication({db,as,check,ids}){
  const people={};let n=2000;
- for(const [name,role,city] of [['manager','host_manager','jakarta'],['otherManager','host_manager','bandung'],['hostA','host','jakarta'],['hostB','host','jakarta'],['operator','staff','jakarta'],['hostCityB','host','bandung']]){
+ for(const [name,role,city] of [['operatorManager','operator_manager','jakarta'],['manager','host_manager','jakarta'],['otherManager','host_manager','bandung'],['hostA','host','jakarta'],['hostB','host','jakarta'],['operator','staff','jakarta'],['hostCityB','host','bandung']]){
   const id=`20000000-0000-4000-8000-${String(n++).padStart(12,'0')}`;people[name]=id;
   await db.query('insert into auth.users values($1)',[id]);
   await as(0,'select public.manage_account($1,$2,$3,$4,\'mitra\',true,25000,\'2099-01-01\')',[id,name,role,city]);
@@ -57,4 +57,14 @@ export async function testStagedPublication({db,as,check,ids}){
  await check('capacity is rechecked before publishing a saved studio change',async()=>{await edit('manager',capacitySession,'',studio2);await assert.rejects(()=>batch('manager','schedule_publish',{ids:[capacitySession]}),/Kapasitas studio penuh/);assert.equal((await raw(capacitySession)).studio_id,studio)});
  await check('unconfirmed placement allows setting a rate before host publication',async()=>{const id=await create('2099-02-06',11,12,people.hostA);await batch('manager','schedule_publish',{ids:[id]});await action('manager','rate',{location:'jakarta',host:people.hostA,effective:'2099-02-06',fee:28000});await batch('manager','host_publish',{ids:[id]});assert.equal(Number((await raw(id)).host_fee),28000)});
  await check('past schedules remain unpublishable',async()=>{await db.query("update public.live_sessions set work_date='2020-01-01' where id=$1",[fifth]);await assert.rejects(()=>batch('manager','host_publish',{ids:[fifth]}),/berjalan/)});
+ await check('operator manager reads quotation values and master references in own location',async()=>{
+  const data=await snap('operatorManager');assert.equal(data.quotations.find(q=>q.id===quotation).rate,100000);assert(data.brands.some(b=>b.id===brand));assert(data.studios.some(s=>s.id===studio));assert(data.studios.every(s=>s.location_id==='jakarta'));
+  await db.query('update public.production_brands set active=false where id=$1',[otherBrand]);assert((await snap('operatorManager')).brands.some(b=>b.id===otherBrand));
+ });
+ await check('operator reference access does not expose host fees or peer rates',async()=>{const data=await snap('operatorManager');assert.equal(data.rates.length,0);assert(data.sessions.every(s=>!('host_fee' in s)||s.host_fee===null));assert.equal((await snap('hostA')).quotations.find(q=>q.id===quotation).rate,undefined)});
+ await check('operator reference access does not grant quotation or master management',async()=>{
+  for(const name of ['quotation_edit','quotation_delete','brand_edit','brand_delete','studio_edit','studio_delete'])await assert.rejects(()=>as(people.operatorManager,'select public.production_manage($1,$2::jsonb)',[name,JSON.stringify({id:quotation,confirm:true})]));
+  await assert.rejects(()=>action('operatorManager','quotation',{}));await assert.rejects(()=>action('operatorManager','master_brand',{}));
+ });
+
 }

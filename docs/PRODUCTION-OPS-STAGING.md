@@ -161,3 +161,10 @@ Current flow:
 7. Publication is atomic: one failed session leaves every other session and proposal unchanged. Review version checks reject edits changed by another manager. Published assignments and cost/logbook snapshots remain intact until publication succeeds.
 
 Verification: local PGlite migration upgrade and role/RPC tests, app unit/render tests, TypeScript and Vite build. Browser installation failed in this environment; authenticated hosted interaction remains a staging UAT step. The connected Supabase account did not list the Orbiz staging project, so hosted SQL was not applied by the agent.
+
+## Host Cost layout and Operator Manager reference access — 23 September 2026
+
+- Host Cost starts with **Undang akun**, followed by **Host & estimasi cost**. Both sections are collapsed by default and expand independently. Invitation, rate input and export behavior are unchanged.
+- Operator Manager has the existing Ringkasan menu plus Quotation & Kuota and Master Data. The new pages show reference tables without creation/edit/delete controls. Quotations and brand references are general; studio references follow the account location.
+- Apply `202609230001_operator_reference_access.sql` after `202609220002_staged_publication.sql` in Orbiz-Livestreaming-Staging. It permits Operator Manager to read quotation rates and inactive brand references. It does not change existing mutation grants, expose host fee/rate data, or permit cross-location operational reads.
+- Verified: 240 PostgreSQL checks, 57 application/render tests and production build. Hosted SQL has not been applied by the agent.

@@ -69,3 +69,7 @@
 .production .host-publication-label{display:block;margin-top:5px;color:var(--muted)}
 .production .publish-review-dialog{max-width:540px;width:calc(100% - 32px);border:1px solid #dfd9e8;border-radius:14px;padding:24px;color:#352c44}
 .production .publish-review-dialog::backdrop{background:rgb(30 20 45 / 45%)}
+
+.production details.host-cost-panel{border-top:0;padding:0}
+.production .host-cost-panel>summary{font-size:20px;margin:0}
+.production .host-cost-panel[open]>summary{margin-bottom:20px}

@@ -1,5 +1,9 @@
 # Production Ops V1 — setup & UAT
 
+## Live ID (migration 202609230002)
+
+Apply `supabase/migrations/202609230002_live_ids.sql` to the isolated staging database after `202609230001_operator_reference_access.sql`, then refresh the preview. It backfills existing sessions and assigns unique immutable `LS-YY-NNNNNN` business identifiers to new sessions. Schedule labels and nonunique legacy DMYY aliases follow date, hours and quotation Shop ID. See `docs/LIVE-ID-CONVENTION.md`. Do not deploy the updated frontend against a staging database missing this migration.
+
 Branch: `feature/livestreaming-production-v1`. This is an incremental UAT candidate, not an approved production release. Do not merge to main or run new migrations on the operational database yet.
 
 ## Implemented scope

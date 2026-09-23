@@ -57,7 +57,7 @@ export function readScheduleWorkbook(bytes:Uint8Array):ImportScheduleRow[]{
   const cells:Cell[]=[];
   for(const c of tags(row,'c')){
    const address=c.getAttribute('r')??'',col=/^([A-Z]+)\d+$/.exec(address)?.[1];if(!col)throw new Error('Alamat sel tidak valid.');
-   const index=[...col].reduce((n,x)=>n*26+x.charCodeAt(0)-64,0)-1;if(index>11)continue;
+   const index=[...col].reduce((n,x)=>n*26+x.charCodeAt(0)-64,0)-1;if(index>13)continue;
    if(tags(c,'f').length)throw new Error(`Sel ${address}: gunakan nilai biasa, bukan formula.`);
    const t=c.getAttribute('t'),v=tags(c,'v')[0]?.textContent??'';
    let val:Cell=t==='inlineStr'?tags(c,'t').map(t=>t.textContent??'').join(''):t==='s'?strings[Number(v)]??'':t==='str'||t==='d'?v:v===''?'':Number(v);
@@ -77,10 +77,10 @@ export async function readScheduleFile(file:File){
 }
 export function scheduleExportRows(sessions:LiveSession[],data:ProductionData):Cell[][]{
  const qs=new Map(data.quotations.map(q=>[q.id,q])),studios=new Map(data.studios.map(s=>[s.id,s])),hosts=new Map(data.hosts.map(h=>[h.id,h]));
- return sessions.map(s=>{const q=qs.get(s.quotation_id);return [Date.parse(s.work_date+'T00:00:00Z')/86400000+25569,q?.brand??'',q?.platform??'',s.location_id,studios.get(s.studio_id)?.name??'',s.start_hour,s.end_hour,hosts.get(s.host_id??'')?.display_name??'',s.host_id??'',s.status,s.id]});
+ return sessions.map(s=>{const q=qs.get(s.quotation_id);return [Date.parse(s.work_date+'T00:00:00Z')/86400000+25569,q?.brand??'',q?.platform??'',s.location_id,studios.get(s.studio_id)?.name??'',s.start_hour,s.end_hour,hosts.get(s.host_id??'')?.display_name??'',s.host_id??'',s.status,s.id,s.live_code??'',s.live_label??'',s.legacy_live_id??'']});
 }
 export function exportSchedule(sessions:LiveSession[],data:ProductionData,filename:string){
- const bytes=logbookWorkbook(scheduleExportRows(sessions,data),[...scheduleHeaders,'Status','Session ID'],'Jadwal',[0]);
+ const bytes=logbookWorkbook(scheduleExportRows(sessions,data),[...scheduleHeaders,'Status','Session ID','Live ID','Label Jadwal','Legacy Live ID'],'Jadwal',[0]);
  const url=URL.createObjectURL(new Blob([new Uint8Array(bytes)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
  const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }

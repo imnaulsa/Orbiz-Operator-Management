@@ -16,6 +16,32 @@ export async function testStagedPublication({db,as,check,ids}){
  const quotation=(await action(0,'quotation',{brand,platform:'TikTok',reference:'Q-STAGED',period_start:'2099-02-01',period_end:'2099-02-28',hours:100,rate:100000})).id;
  const create=async(date,start=9,end=11,host='')=>{await action(0,'session_multi',{location:'jakarta',studio,quotation,dates:[date],start,end,host});return (await snap(0)).sessions.find(s=>s.quotation_id===quotation&&s.work_date===date&&s.start_hour===start).id};
  const first=await create('2099-02-01'),second=await create('2099-02-02');
+ await check('migration backfills stable Live IDs for historical sessions',async()=>{
+  const rows=(await db.query('select id,live_code,live_label,legacy_live_id from public.live_sessions')).rows;
+  assert(rows.length>0&&rows.every(r=>/^LS-\d{2}-\d{6,}$/.test(r.live_code)&&r.live_label&&r.legacy_live_id));
+  assert.equal(new Set(rows.map(r=>r.live_code)).size,rows.length);
+ });
+ await check('new sessions expose stable Live ID and two schedule labels in snapshot',async()=>{
+  const s=(await snap(0)).sessions.find(s=>s.id===first);
+  assert.match(s.live_code,/^LS-99-\d{6,}$/);
+  assert.equal(s.live_label,'20990201_0900-1100_TTSTAGED');
+  assert.equal(s.legacy_live_id,'1299_0911_TTSTAGED');
+ });
+ await check('rescheduling updates labels but preserves Live ID and UUID',async()=>{
+  const before=await raw(first);
+  await db.query('update public.live_sessions set start_hour=8,end_hour=10,live_code=$2 where id=$1',[first,'LS-99-999999']);
+  const after=await raw(first);
+  assert.equal(after.id,before.id);assert.equal(after.live_code,before.live_code);
+  assert.equal(after.live_label,'20990201_0800-1000_TTSTAGED');
+  assert.equal(after.legacy_live_id,'1299_0810_TTSTAGED');
+  await db.query('update public.live_sessions set start_hour=9,end_hour=11 where id=$1',[first]);
+ });
+ await check('legacy DMYY collisions remain valid distinct sessions',async()=>{
+  const rows=(await db.query("insert into public.live_sessions(location_id,quotation_id,studio_id,lane,work_date,start_hour,end_hour,created_by) select location_id,quotation_id,studio_id,lane,d,9,11,created_by from public.live_sessions cross join (values ('2099-01-11'::date),('2099-11-01'::date)) v(d) where id=$1 returning id,live_code,legacy_live_id",[first])).rows;
+  assert.equal(rows.length,2);assert.equal(rows[0].legacy_live_id,rows[1].legacy_live_id);
+  assert.notEqual(rows[0].live_code,rows[1].live_code);
+  await db.query('delete from public.live_sessions where id=any($1::uuid[])',[rows.map(r=>r.id)]);
+ });
  await check('upgrade preserves previously published host assignments',async()=>{const r=await db.query("select count(*)::int n from public.live_sessions where status='published' and host_id is not null and host_fee is not null and not host_published");assert.equal(r.rows[0].n,0)});
  await check('staff and hosts cannot see draft schedules',async()=>{assert.equal((await snap('hostA')).sessions.length,0);assert.equal((await snap('operator')).sessions.length,0)});
  await check('publish schedule without operator shift or host succeeds',async()=>{const r=await batch('manager','schedule_publish',{ids:[first,second]});assert.equal(r.published,2);assert.equal((await raw(first)).host_published,false)});

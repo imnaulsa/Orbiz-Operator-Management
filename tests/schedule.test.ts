@@ -80,12 +80,13 @@ describe('schedule Excel import/export',()=>{
  it('ignores blank rows and accepts optional IDs from export',()=>{
   const parsed=parseScheduleGrid([scheduleHeaders,[],[...row,'host-uuid','draft','session-uuid']]);expect(parsed[0].row).toBe(3);expect(parsed[0].host_id).toBe('host-uuid');
  });
- it('exports all supplied rows, eleven columns, typed dates and formula-safe names',()=>{
+ it('exports all supplied rows, live identifiers, typed dates and formula-safe names',()=>{
   const data={quotations:[{id:'q',reference:'001',brand:'=Brand',platform:'Mirror'}],studios:[{id:'st',name:'Studio A'}],hosts:[]} as unknown as ProductionData;
-  const sessions=Array.from({length:23},(_,i)=>({id:String(i),quotation_id:'q',studio_id:'st',location_id:'jakarta',work_date:'2099-01-01',start_hour:9,end_hour:11,status:'draft',host_id:null})) as LiveSession[];
+  const sessions=Array.from({length:23},(_,i)=>({id:String(i),quotation_id:'q',studio_id:'st',location_id:'jakarta',work_date:'2099-01-01',start_hour:9,end_hour:11,status:'draft',host_id:null,live_code:`LS-99-${String(i+1).padStart(6,'0')}`,live_label:'20990101_0900-1100_TTBRAND',legacy_live_id:'1199_0911_TTBRAND'})) as LiveSession[];
   const rows=scheduleExportRows(sessions,data);expect(rows).toHaveLength(23);
-  const bytes=logbookWorkbook(rows,[...scheduleHeaders,'Status','Session ID'],'Jadwal',[0]),zip=unzipSync(bytes),xml=strFromU8(zip['xl/worksheets/sheet1.xml']);
-  expect(xml).toContain('A1:K24');expect(xml).toContain('r="A2" s="2"');expect(xml).not.toContain('<f>');
+  const bytes=logbookWorkbook(rows,[...scheduleHeaders,'Status','Session ID','Live ID','Label Jadwal','Legacy Live ID'],'Jadwal',[0]),zip=unzipSync(bytes),xml=strFromU8(zip['xl/worksheets/sheet1.xml']);
+  expect(xml).toContain('A1:N24');expect(xml).toContain('r="A2" s="2"');expect(xml).not.toContain('<f>');
+  expect(rows[0].slice(11)).toEqual(['LS-99-000001','20990101_0900-1100_TTBRAND','1199_0911_TTBRAND']);
   expect(strFromU8(zip['xl/workbook.xml'])).toContain('name="Jadwal"');
   expect(parseScheduleGrid([scheduleHeaders,rows[0]])[0].brand).toBe('=Brand');
  });

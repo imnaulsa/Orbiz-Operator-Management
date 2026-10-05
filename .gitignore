@@ -6,3 +6,5 @@ dist/
 .netlify/
 coverage/
 *.log
+__pycache__/
+*.pyc

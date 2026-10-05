@@ -21,9 +21,6 @@ schedule_assignments: { Row: { id: string; operator_id: string; location_id: str
 schedule_publications: { Row: { id: string; location_id: string; week_start: string; version: number; published_by: string; published_at: string }; Insert: never; Update: never; Relationships: [] };
 schedule_signals: { Row: { location_id: string; revision: number }; Insert: never; Update: never; Relationships: [] };
 }; Views: {}; Functions: {
-production_manage: { Args: { p_action: string; p_payload: Json }; Returns: Json };
-production_schedule_tools: { Args: { p_action: string; p_payload: Json }; Returns: Json };
-calculate_operator_cost: { Args: { p_location: string | null; p_start: string; p_end: string }; Returns: Json };
 publish_schedule_week: { Args: { p_location: string | null; p_week: string }; Returns: string };
 submit_partial_availability: { Args: { p_slots: Json }; Returns: string };
 review_availability_submission: { Args: { p_id: string; p_approve: boolean; p_note?: string }; Returns: undefined };
@@ -31,11 +28,14 @@ submit_leave_request: { Args: { p_date: string; p_start: string; p_end: string; 
 review_leave_request: { Args: { p_id: string; p_approve: boolean; p_note?: string }; Returns: number };
 upsert_operator_assignment: { Args: { p_operator: string; p_location: string | null; p_date: string; p_start: number; p_end: number; p_remove?: boolean }; Returns: undefined };
 copy_schedule_day: { Args: { p_location: string | null; p_source: string; p_targets: (string)[]; p_mode: string; p_preview?: boolean }; Returns: Json };
+calculate_operator_cost: { Args: { p_location: string | null; p_start: string; p_end: string }; Returns: Json };
 get_overlapping_colleagues: { Args: { p_start: string; p_end: string }; Returns: {work_date:string;hour:number;display_name:string}[] };
+production_manage: { Args: { p_action: string; p_payload: Json }; Returns: Json };
+production_schedule_tools: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 add_operator_rate: { Args: { p_operator: string; p_effective: string; p_fee: number }; Returns: string };
+production_action: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 production_snapshot: { Args: { p_location: string | null; p_start: string; p_end: string }; Returns: Json };
 manage_account: { Args: { p_id: string; p_name: string; p_role: Database['public']['Enums']['app_role']; p_location: string | null; p_employment: Database['public']['Enums']['employment_type']; p_active: boolean; p_initial_fee?: number; p_effective?: string }; Returns: undefined };
 production_snapshot_v2: { Args: { p_location: string | null; p_start: string; p_end: string }; Returns: Json };
 production_action_v2: { Args: { p_action: string; p_payload: Json }; Returns: Json };
-production_action: { Args: { p_action: string; p_payload: Json }; Returns: Json };
 }; Enums: {app_role: "super_admin" | "operator_manager" | "staff" | "host_manager" | "host" | "admin_sales"; assignment_layer: "draft" | "published"; employment_type: "internal" | "mitra"; review_status: "pending" | "approved" | "rejected"}; CompositeTypes: {} } };

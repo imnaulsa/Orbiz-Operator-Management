@@ -26,6 +26,7 @@ import type { Json } from '../lib/database.generated';
 import './production.css';
 import { MultiDatePicker } from './MultiDatePicker';
 import { MasterDataPage, QuotationPage } from './ProductionManagement';
+import { ManagementDataPage } from './ManagementData';
 import {
   ScheduleTablePage,
   ScheduleSummaryPage,
@@ -148,6 +149,12 @@ function ProductionShell({ profile }: { profile: Profile }) {
       : profile.role === 'staff'
         ? [{ items: [{ key: 'logbook', label: 'Logbook Production' }] }]
         : []),
+    {
+      label: 'Management Data',
+      items: [
+        { key: 'management_data', label: 'Jadwal Live & Feedback' },
+      ],
+    },
   ];
 
   const links = navGroups.flatMap((group) => group.items);
@@ -165,7 +172,7 @@ function ProductionShell({ profile }: { profile: Profile }) {
       setStart(p.start);
       setEnd(p.end);
       setCalendarMode('monthly');
-    } else if (['quotation', 'schedule_plotting'].includes(next)) {
+    } else if (['quotation', 'schedule_plotting', 'management_data'].includes(next)) {
       const p = calendarMonth(today());
       setStart(p.start);
       setEnd(p.end);
@@ -228,6 +235,7 @@ function ProductionShell({ profile }: { profile: Profile }) {
       'schedule_table',
       'studio_timeline',
       'schedule_summary',
+      'management_data',
     ].includes(page);
 
   return (
@@ -306,7 +314,7 @@ function ProductionShell({ profile }: { profile: Profile }) {
           Kandidat UAT · Publish jadwal untuk visibility; penugasan host dipublish setelah plotting. Semua waktu menggunakan WIB.
         </div>
 
-        {!['schedule_table', 'studio_timeline', 'schedule_summary'].includes(page) && (
+        {!['schedule_table', 'studio_timeline', 'schedule_summary', 'management_data'].includes(page) && (
           <PeriodToolbar
             key={page}
             page={page}
@@ -345,6 +353,10 @@ function ProductionShell({ profile }: { profile: Profile }) {
           calendar={calendar}
           actionError={error}
           snapshotLocation={globalPage ? null : location}
+          setDateRange={(s, e) => {
+            setStart(s);
+            setEnd(e);
+          }}
         />
 
         <footer>Orbiz Livestreaming Management · Pembaruan otomatis setiap 15 detik</footer>
@@ -468,6 +480,7 @@ function ProductionContent(
     manager: boolean;
     snapshotLocation: string | null;
     calendar: ScheduleCalendar;
+    setDateRange: (start: string, end: string) => void;
   },
 ) {
   const [data, setData] = useState<ProductionData | null>(null);
@@ -522,6 +535,15 @@ function ProductionContent(
 
   const c = { ...props, data };
 
+  if (props.page === 'management_data') {
+    return (
+      <ManagementDataPage
+        {...c}
+        setDateRange={props.setDateRange}
+        onRefresh={props.calendar.refresh}
+      />
+    );
+  }
   if (props.page === 'quotation') return <QuotationPage {...c} />;
   if (props.page === 'master') return <MasterDataPage {...c} />;
   if (props.page === 'schedule_plotting') return <PlottingPage {...c} />;

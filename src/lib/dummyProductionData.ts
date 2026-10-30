@@ -25,6 +25,7 @@ export const DUMMY_BRANDS: DummyBrandConfig[] = [
   { id: 'b_dearme', name: 'Dear Me Beauty', platform: 'Mirror', mirror: 'ST-DEARME' },
   { id: 'b_fore', name: 'Fore Coffee Official', platform: 'TikTok', tiktok: 'TT-FORE' },
   { id: 'b_ventela', name: 'Ventela Shoes Indonesia', platform: 'TikTok', tiktok: 'TT-VENTELA' },
+  { id: 'b_astra', name: 'ASTRA', platform: 'Mirror', mirror: 'STASTRA' },
 ];
 
 export const DUMMY_HOSTS = [
@@ -35,6 +36,11 @@ export const DUMMY_HOSTS = [
   { id: 'h_amanda', display_name: 'Amanda Manopo', active: true, location_id: 'bandung' },
   { id: 'h_clarissa', display_name: 'Clarissa Wang', active: true, location_id: 'bandung' },
   { id: 'h_dimas', display_name: 'Dimas Anggara', active: true, location_id: 'bandung' },
+  { id: 'h_jo', display_name: 'JO', active: true, location_id: 'bandung' },
+  { id: 'h_fiqa', display_name: 'FIQA', active: true, location_id: 'bandung' },
+  { id: 'h_alwin', display_name: 'ALWIN', active: true, location_id: 'bandung' },
+  { id: 'h_ardhy', display_name: 'ARDHY', active: true, location_id: 'bandung' },
+  { id: 'h_chika', display_name: 'CHIKA', active: true, location_id: 'bandung' },
 ];
 
 export const DUMMY_OPERATORS: Record<string, string> = {
@@ -51,6 +57,7 @@ export const DUMMY_STUDIOS = [
   { id: 'st_jkt_3', location_id: 'jakarta', name: 'Studio Green Screen', capacity: 1 },
   { id: 'st_bdg_1', location_id: 'bandung', name: 'Studio Bandung Creative', capacity: 2 },
   { id: 'st_bdg_2', location_id: 'bandung', name: 'Studio Bandung Showcase', capacity: 1 },
+  { id: 'st_bdg_23', location_id: 'bandung', name: 'STUDIO 23 BDG', capacity: 2 },
 ];
 
 interface SessionSeedDef {
@@ -63,6 +70,7 @@ interface SessionSeedDef {
   opKey: string;
   code: string;
   label: string;
+  legacyLiveId?: string;
   scenario:
     | 'lancar_1'
     | 'lancar_2'
@@ -416,6 +424,150 @@ const SEED_DEFINITIONS: SessionSeedDef[] = [
     label: 'Ventela Post 11.11 Restock Sneakers',
     scenario: 'lancar_1',
   },
+  // 27-37. ASTRA OCTOBER 2026 (Authentic rows from input.xlsx)
+  {
+    date: '2026-10-01',
+    startHour: 9,
+    endHour: 11,
+    brandIdx: 11, // ASTRA (STASTRA)
+    studioIdx: 5, // STUDIO 23 BDG
+    hostIdx: 7,   // JO
+    opKey: 'op_ilham',
+    code: 'LS-26-000101',
+    label: '20261001_0900-1100_STASTRA',
+    legacyLiveId: '11026_0911_STAST',
+    scenario: 'lancar_1',
+  },
+  {
+    date: '2026-10-01',
+    startHour: 11,
+    endHour: 13,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 8,   // FIQA
+    opKey: 'op_ilham',
+    code: 'LS-26-000102',
+    label: '20261001_1100-1300_STASTRA',
+    legacyLiveId: '11026_1113_STAST',
+    scenario: 'lancar_2',
+  },
+  {
+    date: '2026-10-01',
+    startHour: 17,
+    endHour: 19,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 8,   // FIQA
+    opKey: 'op_aldi',
+    code: 'LS-26-000103',
+    label: '20261001_1700-1900_STASTRA',
+    legacyLiveId: '11026_1719_STAST',
+    scenario: 'lancar_1',
+  },
+  {
+    date: '2026-10-01',
+    startHour: 19,
+    endHour: 21,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 9,   // ALWIN
+    opKey: 'op_aldi',
+    code: 'LS-26-000104',
+    label: '20261001_1900-2100_STASTRA',
+    legacyLiveId: '11026_1921_STAST',
+    scenario: 'lancar_2',
+  },
+  {
+    date: '2026-10-01',
+    startHour: 21,
+    endHour: 23,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 9,   // ALWIN
+    opKey: 'op_aldi',
+    code: 'LS-26-000105',
+    label: '20261001_2100-2300_STASTRA',
+    legacyLiveId: '11026_2123_STAST',
+    scenario: 'kendala_stok_katalog',
+  },
+  {
+    date: '2026-10-02',
+    startHour: 9,
+    endHour: 11,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 10,  // ARDHY
+    opKey: 'op_ilham',
+    code: 'LS-26-000106',
+    label: '20261002_0900-1100_STASTRA',
+    legacyLiveId: '21026_0911_STAST',
+    scenario: 'kendala_stok_katalog',
+  },
+  {
+    date: '2026-10-10',
+    startHour: 0,
+    endHour: 2,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 10,  // ARDHY
+    opKey: 'op_ilham',
+    code: 'LS-26-000110',
+    label: '20261010_0000-0200_STASTRA',
+    legacyLiveId: '101026_0002_STAST',
+    scenario: 'lancar_1',
+  },
+  {
+    date: '2026-10-14',
+    startHour: 9,
+    endHour: 11,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 8,   // FIQA
+    opKey: 'op_ilham',
+    code: 'LS-26-000114',
+    label: '20261014_0900-1100_STASTRA',
+    legacyLiveId: '141026_0911_STAST',
+    scenario: 'kendala_audio',
+  },
+  {
+    date: '2026-10-17',
+    startHour: 19,
+    endHour: 21,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 7,   // JO
+    opKey: 'op_aldi',
+    code: 'LS-26-000117',
+    label: '20261017_1900-2100_STASTRA',
+    legacyLiveId: '171026_1921_STAST',
+    scenario: 'kendala_jaringan',
+  },
+  {
+    date: '2026-10-19',
+    startHour: 19,
+    endHour: 21,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 9,   // ALWIN
+    opKey: 'op_aldi',
+    code: 'LS-26-000119',
+    label: '20261019_1900-2100_STASTRA',
+    legacyLiveId: '191026__STAST',
+    scenario: 'kendala_lighting',
+  },
+  {
+    date: '2026-10-25',
+    startHour: 0,
+    endHour: 2,
+    brandIdx: 11,
+    studioIdx: 5,
+    hostIdx: 9,   // ALWIN
+    opKey: 'op_ilham',
+    code: 'LS-26-000125',
+    label: '20261025_0000-0200_STASTRA',
+    legacyLiveId: '251026_0002_STAST',
+    scenario: 'lancar_1',
+  },
 ];
 
 export function buildRealisticDummyProductionData(
@@ -500,7 +652,7 @@ export function buildRealisticDummyProductionData(
       host_published: true,
       live_code: seed.code,
       live_label: seed.label,
-      legacy_live_id: '',
+      legacy_live_id: seed.legacyLiveId ?? '',
     });
 
     const startStr = `${String(seed.startHour).padStart(2, '0')}:00`;

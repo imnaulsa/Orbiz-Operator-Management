@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ManagementDataPage } from '../src/components/ManagementData';
+import { SheetTrackerPage } from '../src/components/SheetTrackerPage';
 import type { Ctx } from '../src/components/ProductionWorkspace';
 import type { ProductionData } from '../src/lib/production';
 import type { Profile } from '../src/lib/domain';
@@ -211,3 +212,80 @@ describe('ManagementDataPage rendering', () => {
   });
 });
 
+
+describe('SheetTrackerPage (input.xlsx) rendering', () => {
+  it('renders input.xlsx tracker columns, Brand ASTRA seed data, and Form Input triggers', () => {
+    const html = renderToStaticMarkup(
+      <SheetTrackerPage
+        data={{
+          brands: [],
+          studios: [],
+          quotations: [],
+          hosts: [],
+          availability: [],
+          leaves: [],
+          rates: [],
+          sessions: [],
+          checks: [],
+        }}
+        profile={{
+          id: 'admin1',
+          display_name: 'Super Admin',
+          role: 'super_admin',
+          location_id: 'jakarta',
+          employment_type: 'internal',
+          active: true,
+          created_at: '2026-01-01T00:00:00Z',
+        }}
+        location="jakarta"
+        start="2026-10-01"
+        end="2026-10-31"
+        busy={false}
+        act={vi.fn()}
+        run={vi.fn()}
+        setDateRange={vi.fn()}
+        onRefresh={vi.fn()}
+      />
+    );
+
+    // Check input.xlsx headers
+    expect(html).toContain('Shop ID');
+    expect(html).toContain('Live ID');
+    expect(html).toContain('LS Time');
+    expect(html).toContain('GMV Target');
+    expect(html).toContain('Views Target');
+    expect(html).toContain('Top Views');
+    expect(html).toContain('Avg. Viewing Duration');
+    expect(html).toContain('Views To CO');
+    expect(html).toContain('AOV');
+    expect(html).toContain('Live issues');
+    expect(html).toContain('Livestreaming Background');
+    expect(html).toContain('Livestreaming Tittle');
+    expect(html).toContain('Total Duration (s)');
+    expect(html).toContain('Speaking (s)');
+    expect(html).toContain('Facing Camera (s)');
+    expect(html).toContain('ADS');
+    expect(html).toContain('Coins');
+    expect(html).toContain('Promo Remarks');
+
+    // Check ASTRA brand and Form Input button
+    expect(html).toContain('ASTRA');
+    expect(html).toContain('+ Form Input Sheet Tracker');
+    expect(html).toContain('Input Tracker');
+
+    // Check exact input.xlsx colors and SUB TOTAL (without Overall Performance table)
+    expect(html).toContain('#CAEDFB');
+    expect(html).toContain('#FF9900');
+    expect(html).toContain('#180E30');
+    expect(html).toContain('#8334CD');
+    expect(html).toContain('#D6F170');
+    expect(html).toContain('#FFFF00');
+    expect(html).toContain('#9FC5E8');
+    expect(html).toContain('#F4CCCC');
+    expect(html).toContain('#F4C7C3');
+    expect(html).toContain('#B7E1CD');
+    expect(html).toContain('#FADCFE');
+    expect(html).toContain('SUB TOTAL');
+    expect(html).not.toContain('Overall Performance');
+  });
+});

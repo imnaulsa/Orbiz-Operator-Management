@@ -195,3 +195,144 @@ describe('managementExport', () => {
     expect(stylesXml).toContain('FF6C32B9');
   });
 });
+
+
+import {
+  SHOPEE_TRACKER_HEADERS,
+  TIKTOK_TRACKER_HEADERS,
+  DAILY_COMPARISON_HEADERS,
+  buildLegacySheetLiveId,
+  deriveCampaignStatus,
+  computeTrackerRow,
+  buildDailyComparisonRows,
+  createBrandSheetTrackerWorkbook,
+} from '../src/lib/sheetTrackerData';
+
+describe('sheetTrackerData (input.xlsx alignment)', () => {
+  it('matches exact column headers of input.xlsx for Shopee (29 cols), TikTok (41 cols), and Daily Comparison (28 cols)', () => {
+    expect(SHOPEE_TRACKER_HEADERS.length).toBe(29);
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Date');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Host');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('GMV Target');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Views To CO');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('AOV');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Live issues');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Livestreaming Background');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Livestreaming Tittle');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Total Duration (s)');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Speaking (s)');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Facing Camera (s)');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('ADS');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Coins');
+    expect(SHOPEE_TRACKER_HEADERS).toContain('Promo Remarks');
+
+    expect(TIKTOK_TRACKER_HEADERS.length).toBe(41);
+    expect(DAILY_COMPARISON_HEADERS.length).toBe(28);
+  });
+
+  it('links Date-Host from Production and computes GMV-AOV, Live Issue, Design BG, and Host Behaviour Monitoring', () => {
+    expect(buildLegacySheetLiveId('2026-10-01', 9, 11, 'STASTRA')).toBe('11026_0911_STAST');
+    expect(deriveCampaignStatus('2026-10-01')).toBe('BAU');
+    expect(deriveCampaignStatus('2026-10-10')).toBe('DOUBLE DATE');
+    expect(deriveCampaignStatus('2026-10-25')).toBe('PAYDAY');
+
+    const baseRow: ManagementDataRow = {
+      session: {
+        id: 's_astra_1',
+        location_id: 'bandung',
+        quotation_id: 'q_astra',
+        studio_id: 'st_bdg_23',
+        lane: 1,
+        work_date: '2026-10-01',
+        start_hour: 9,
+        end_hour: 11,
+        host_id: 'h_jo',
+        host_fee: 65000,
+        status: 'published',
+        created_by: 'u1',
+        created_at: '',
+        host_published: true,
+        live_code: 'LS-26-000101',
+        live_label: '20261001_0900-1100_STASTRA',
+        legacy_live_id: '11026_0911_STAST',
+      },
+      quotation: {
+        id: 'q_astra',
+        location_id: 'bandung',
+        reference: 'QT-ASTRA',
+        brand: 'ASTRA',
+        account: 'STASTRA',
+        platform: 'Mirror',
+        period_start: '2026-10-01',
+        period_end: '2026-10-31',
+        hours: 100,
+        allocated_hours: 20,
+        rate: 90000,
+        best_hours: [9, 11],
+        created_by: 'u1',
+        created_at: '',
+        brand_id: 'b_astra',
+        best_hour_slots: [],
+      },
+      brandName: 'ASTRA',
+      platform: 'Mirror',
+      location: 'Bandung',
+      studioName: 'STUDIO 23 BDG',
+      lane: 1,
+      hostName: 'JO',
+      status: 'published',
+      plannedHours: 2,
+      hostCheckStatus: 'Sudah',
+      hostActualStart: '09:00 WIB',
+      hostActualEnd: '11:00 WIB',
+      hostActualHours: 2,
+      hostReady: true,
+      hostBrief: true,
+      hostNote: '',
+      hostSubmittedAt: '',
+      opCheckStatus: 'Sudah',
+      opAudio: true,
+      opCamera: true,
+      opNetwork: true,
+      opNote: '',
+      opOperatorName: 'Ilham OP',
+      opSubmittedAt: '',
+      evaluationStatus: 'Lengkap',
+      hasNotes: false,
+    };
+
+    const computed = computeTrackerRow(baseRow);
+    expect(computed.shopId).toBe('STASTRA');
+    expect(computed.liveId).toBe('11026_0911_STAST');
+    expect(computed.date).toBe('2026-10-01');
+    expect(computed.day).toBe('Thursday');
+    expect(computed.lsTime).toBe('09.00 - 11.00');
+    expect(computed.duration).toBe(2);
+    expect(computed.status).toBe('BAU');
+    expect(computed.location).toBe('BANDUNG');
+    expect(computed.studio).toBe('STUDIO 23 BDG');
+    expect(computed.host).toBe('JO');
+    // From ASTRA_INPUT_XLSX_SEED: Views=834, CO=17, GMV=5838460
+    expect(computed.spViews).toBe(834);
+    expect(computed.spCo).toBe(17);
+    expect(computed.spGmv).toBe(5838460);
+    expect(computed.spViewsToCo).toBeCloseTo(17 / 834, 6);
+    expect(computed.spAov).toBeCloseTo(5838460 / 17, 2);
+    expect(computed.totalDurationSec).toBeGreaterThan(0);
+    expect(computed.speakingSec).toBeGreaterThan(0);
+    expect(computed.facingCameraSec).toBeGreaterThan(0);
+
+    const { dailyRows, subTotal } = buildDailyComparisonRows([computed]);
+    expect(dailyRows).toHaveLength(1);
+    expect(dailyRows[0].hoursShopee).toBe(2);
+    expect(dailyRows[0].spGmv).toBe(5838460);
+    expect(subTotal.date).toBe('SUB TOTAL');
+
+    const wbBytes = createBrandSheetTrackerWorkbook([computed], 'ASTRA', 'OCTOBER', 2026);
+    const zip = unzipSync(wbBytes);
+    const sheetXml = strFromU8(zip['xl/worksheets/sheet1.xml']);
+    expect(sheetXml).toContain('LIVESTREAMING SHOPEE ASTRA OCTOBER 2026');
+    expect(sheetXml).toContain('LIVESTREAMING TIKTOK ASTRA OCTOBER 2026');
+    expect(sheetXml).toContain('11026_0911_STAST');
+  });
+});

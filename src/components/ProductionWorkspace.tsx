@@ -27,6 +27,7 @@ import './production.css';
 import { MultiDatePicker } from './MultiDatePicker';
 import { MasterDataPage, QuotationPage } from './ProductionManagement';
 import { ManagementDataPage } from './ManagementData';
+import { SheetTrackerPage } from './SheetTrackerPage';
 import {
   ScheduleTablePage,
   ScheduleSummaryPage,
@@ -153,6 +154,7 @@ function ProductionShell({ profile }: { profile: Profile }) {
       label: 'Management Data',
       items: [
         { key: 'management_data', label: 'Jadwal Live & Feedback' },
+        { key: 'sheet_tracker', label: 'Sheet Tracker & Performa' },
       ],
     },
   ];
@@ -172,7 +174,7 @@ function ProductionShell({ profile }: { profile: Profile }) {
       setStart(p.start);
       setEnd(p.end);
       setCalendarMode('monthly');
-    } else if (['quotation', 'schedule_plotting', 'management_data'].includes(next)) {
+    } else if (['quotation', 'schedule_plotting', 'management_data', 'sheet_tracker'].includes(next)) {
       const p = calendarMonth(today());
       setStart(p.start);
       setEnd(p.end);
@@ -236,6 +238,7 @@ function ProductionShell({ profile }: { profile: Profile }) {
       'studio_timeline',
       'schedule_summary',
       'management_data',
+      'sheet_tracker',
     ].includes(page);
 
   return (
@@ -314,7 +317,7 @@ function ProductionShell({ profile }: { profile: Profile }) {
           Kandidat UAT · Publish jadwal untuk visibility; penugasan host dipublish setelah plotting. Semua waktu menggunakan WIB.
         </div>
 
-        {!['schedule_table', 'studio_timeline', 'schedule_summary', 'management_data'].includes(page) && (
+        {!['schedule_table', 'studio_timeline', 'schedule_summary', 'management_data', 'sheet_tracker'].includes(page) && (
           <PeriodToolbar
             key={page}
             page={page}
@@ -538,6 +541,15 @@ function ProductionContent(
   if (props.page === 'management_data') {
     return (
       <ManagementDataPage
+        {...c}
+        setDateRange={props.setDateRange}
+        onRefresh={props.calendar.refresh}
+      />
+    );
+  }
+  if (props.page === 'sheet_tracker') {
+    return (
+      <SheetTrackerPage
         {...c}
         setDateRange={props.setDateRange}
         onRefresh={props.calendar.refresh}

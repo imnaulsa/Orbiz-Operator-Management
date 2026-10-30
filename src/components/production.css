@@ -647,3 +647,205 @@
   gap: 12px;
 }
 
+
+/* Sheet Tracker Table & Form Input Extensions (Consistent with Management UI) */
+.tracker-brand-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #faf8fc;
+  border: 1px solid #e7dfef;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.tracker-brand-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tracker-brand-pills button {
+  min-height: 28px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+}
+
+.tracker-brand-pills button.selected {
+  background: #6c32b9;
+  color: #ffffff;
+  border-color: #6c32b9;
+  font-weight: 600;
+}
+
+.management-table.tracker-grid th,
+.management-table.tracker-grid td {
+  white-space: nowrap;
+  font-size: 0.75rem;
+  padding: 6px 9px;
+  border-right: 1px solid #ece8f2;
+}
+
+.management-table.tracker-grid thead tr.group-banner th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  text-align: center;
+  padding: 7px 10px;
+  border-bottom: 1px solid #dfd6ec;
+}
+
+.management-table.tracker-grid thead tr.group-banner th.banner-shopee {
+  background: #f3ecfb;
+  color: #59259c;
+}
+
+.management-table.tracker-grid thead tr.group-banner th.banner-tiktok {
+  background: #eaf3fc;
+  color: #1b588c;
+}
+
+.management-table.tracker-grid thead tr.group-banner th.banner-daily {
+  background: #edf9f1;
+  color: #165630;
+}
+
+.management-table.tracker-grid thead tr.sub-group th {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 8px;
+  background: #f7f4fb;
+  color: #55486a;
+  border-bottom: 1px solid #e5ddef;
+}
+
+.management-table.tracker-grid tbody tr.subtotal-row td {
+  background: #f5f0fb;
+  font-weight: 700;
+  color: #241c30;
+  border-top: 2px solid #d5c5eb;
+}
+
+.mgmt-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mgmt-form-grid.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.mgmt-form-grid.cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .mgmt-form-grid,
+  .mgmt-form-grid.cols-4,
+  .mgmt-form-grid.cols-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.mgmt-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mgmt-form-field span.field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4f485d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.mgmt-form-field input,
+.mgmt-form-field select,
+.mgmt-form-field textarea {
+  font-size: 0.8125rem;
+  padding: 6px 9px;
+  border: 1px solid #d9d1e6;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #241c30;
+  min-height: 32px;
+}
+
+.mgmt-form-field input[readonly] {
+  background: #f4f1f8;
+  color: #55486a;
+  font-weight: 600;
+}
+
+.mgmt-source-tag {
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.mgmt-source-tag.prod {
+  background: #eee6f9;
+  color: #59259c;
+}
+
+.mgmt-source-tag.manual {
+  background: #fff4e5;
+  color: #8c5208;
+}
+
+.mgmt-source-tag.form {
+  background: #eaf3fc;
+  color: #1b588c;
+}
+
+.mgmt-source-tag.design {
+  background: #fcebf3;
+  color: #96225c;
+}
+
+.mgmt-source-tag.hbm {
+  background: #edf9f1;
+  color: #165630;
+}
+
+/* Exact input.xlsx Spreadsheet Grid Styling */
+.management-table.tracker-grid.excel-exact-grid {
+  border-collapse: collapse;
+  border: 1px solid #bfbfbf;
+}
+
+.management-table.tracker-grid.excel-exact-grid th,
+.management-table.tracker-grid.excel-exact-grid td {
+  border: 1px solid #cccccc;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.75rem;
+  padding: 5px 8px;
+}
+
+.management-table.tracker-grid.excel-exact-grid thead tr.group-banner th {
+  text-transform: none;
+  letter-spacing: 0.2px;
+  font-size: 0.78rem;
+  padding: 7px 10px;
+  border: 1px solid #999999;
+}
+
+.management-table.tracker-grid.excel-exact-grid tbody tr:hover td {
+  filter: brightness(0.97);
+}

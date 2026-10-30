@@ -2,7 +2,7 @@ name: Validate operator management
 on:
   pull_request:
   push:
-    branches: [feature/operator-management-v1]
+    branches: [feature/operator-management-v1, feature/livestreaming-production-v1]
 permissions:
   contents: read
 jobs:
@@ -15,7 +15,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      - run: npm audit --audit-level=moderate --omit=dev
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:db

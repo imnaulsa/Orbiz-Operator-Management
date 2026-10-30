@@ -849,3 +849,217 @@
 .management-table.tracker-grid.excel-exact-grid tbody tr:hover td {
   filter: brightness(0.97);
 }
+
+/* Searchable Dropdown / Combobox Filter Components */
+.searchable-select-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.searchable-select-wrap .field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4f485d;
+}
+
+.searchable-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 10px;
+  background: #ffffff;
+  border: 1px solid #d9d1e6;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  color: #241c30;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.searchable-select-trigger:hover:not(:disabled) {
+  border-color: #b59bd8;
+}
+
+.searchable-select-trigger:focus-visible {
+  outline: none;
+  border-color: #6c32b9;
+  box-shadow: 0 0 0 2px rgba(108, 50, 185, 0.2);
+}
+
+.searchable-select-trigger.is-active-filter {
+  border-color: #8c52d4;
+  background: #fbf9fe;
+  font-weight: 600;
+  color: #4c1888;
+}
+
+.searchable-select-trigger:disabled {
+  background: #f4f1f8;
+  color: #8b8398;
+  cursor: not-allowed;
+}
+
+.searchable-select-trigger .trigger-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchable-select-trigger .trigger-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #eee6f9;
+  color: #59259c;
+}
+
+.searchable-select-trigger .trigger-chevron {
+  font-size: 0.65rem;
+  color: #6a6177;
+  transition: transform 0.15s ease;
+  user-select: none;
+}
+
+.searchable-select-trigger[aria-expanded="true"] .trigger-chevron {
+  transform: rotate(180deg);
+}
+
+.searchable-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: 220px;
+  background: #ffffff;
+  border: 1px solid #d5c8e6;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(36, 28, 48, 0.14);
+  z-index: 120;
+  overflow: hidden;
+  animation: sSelectFadeIn 0.12s ease-out;
+}
+
+@keyframes sSelectFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.searchable-select-search-box {
+  padding: 8px;
+  border-bottom: 1px solid #eee8f5;
+  background: #faf8fc;
+}
+
+.searchable-select-search-box input {
+  width: 100%;
+  padding: 6px 9px;
+  font-size: 0.78rem;
+  border: 1px solid #d9d1e6;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #241c30;
+  outline: none;
+}
+
+.searchable-select-search-box input:focus {
+  border-color: #6c32b9;
+  box-shadow: 0 0 0 2px rgba(108, 50, 185, 0.15);
+}
+
+.searchable-select-list {
+  max-height: 230px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.searchable-select-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 0.8125rem;
+  color: #241c30;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.searchable-select-item:hover,
+.searchable-select-item.is-focused {
+  background: #f4edf9;
+}
+
+.searchable-select-item.is-selected {
+  background: #efe5f8;
+  color: #59259c;
+  font-weight: 600;
+}
+
+.searchable-select-item .item-sub {
+  font-size: 0.7rem;
+  color: #796e8a;
+  white-space: nowrap;
+}
+
+.searchable-select-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #8b8398;
+}
+
+/* Active Filter Chips Strip */
+.mgmt-active-filters-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: #fbf9fe;
+  border-top: 1px dashed #e8def3;
+  margin-top: 8px;
+  font-size: 0.75rem;
+}
+
+.mgmt-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: #eee6f9;
+  color: #59259c;
+  border: 1px solid #d5c3ed;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.mgmt-active-chip button {
+  background: transparent;
+  border: none;
+  color: #59259c;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.mgmt-active-chip button:hover {
+  color: #96225c;
+}

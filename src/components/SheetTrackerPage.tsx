@@ -13,6 +13,7 @@ import {
 } from '../lib/managementExport';
 import { buildRealisticDummyProductionData } from '../lib/dummyProductionData';
 import { getLiveCondition } from './ManagementData';
+import { SearchableSelect, type SearchableOption } from './SearchableSelect';
 import {
   SHOPEE_TRACKER_HEADERS,
   TIKTOK_TRACKER_HEADERS,
@@ -58,6 +59,8 @@ interface TrackerFilterState {
   customStart: string;
   customEnd: string;
   brand: string;
+  date: string; // 'all' or 'YYYY-MM-DD'
+  platform: string; // 'all' | 'shopee' | 'tiktok' | 'mirror'
   location: string;
   host: string;
   status: string;
@@ -116,6 +119,8 @@ export function SheetTrackerPage(
     customStart: c.start,
     customEnd: c.end,
     brand: 'b_astra',
+    date: 'all',
+    platform: 'all',
     location: 'all',
     host: 'all',
     status: 'all',
@@ -265,6 +270,158 @@ export function SheetTrackerPage(
     });
   }, [allRows, customInputs]);
 
+  // Distinct Brand Options for SearchableSelect
+  const brandOptions = useMemo<SearchableOption[]>(() => {
+    const counts = new Map<string, number>();
+    allTrackerRows.forEach((tr) => {
+      const q = tr.baseRow.quotation;
+      const key = q?.brand_id || q?.brand || tr.brandDisplayName;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      counts.set(tr.brandDisplayName, (counts.get(tr.brandDisplayName) ?? 0) + 1);
+    });
+
+    return [
+      {
+        value: 'all',
+        label: 'Semua Brand',
+        subLabel: `${allTrackerRows.length} total sesi`,
+        count: allTrackerRows.length,
+      },
+      ...uniqueBrands.map(([id, name]) => {
+        const c = counts.get(id) ?? counts.get(name) ?? 0;
+        return {
+          value: id,
+          label: name,
+          subLabel: `${c} sesi`,
+          count: c,
+        };
+      }),
+    ];
+  }, [allTrackerRows, uniqueBrands]);
+
+  // Distinct Date Options for SearchableSelect
+  const dateOptions = useMemo<SearchableOption[]>(() => {
+    const dateMap = new Map<string, { date: string; dateShort: string; day: string; count: number }>();
+    allTrackerRows.forEach((tr) => {
+      const r = tr.baseRow;
+      const q = r.quotation;
+      if (filters.brand !== 'all' && q?.brand_id !== filters.brand && q?.brand !== filters.brand && r.brandName !== filters.brand) {
+        return;
+      }
+      const existing = dateMap.get(tr.date);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        dateMap.set(tr.date, {
+          date: tr.date,
+          dateShort: tr.dateShort,
+          day: tr.day,
+          count: 1,
+        });
+      }
+    });
+
+    const sortedDates = Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+    const totalCount = sortedDates.reduce((n, d) => n + d.count, 0);
+
+    return [
+      {
+        value: 'all',
+        label: 'Semua Tanggal',
+        subLabel: `${sortedDates.length} hari live (${totalCount} sesi)`,
+        count: totalCount,
+      },
+      ...sortedDates.map((d) => ({
+        value: d.date,
+        label: `${d.dateShort} (${d.day})`,
+        subLabel: `${d.date} · ${d.count} sesi`,
+        count: d.count,
+      })),
+    ];
+  }, [allTrackerRows, filters.brand]);
+
+  // Distinct Platform Options for SearchableSelect
+  const platformOptions = useMemo<SearchableOption[]>(() => {
+    let shopeeCount = 0;
+    let tiktokCount = 0;
+    let mirrorCount = 0;
+
+    allTrackerRows.forEach((tr) => {
+      const r = tr.baseRow;
+      const q = r.quotation;
+      if (filters.brand !== 'all' && q?.brand_id !== filters.brand && q?.brand !== filters.brand && r.brandName !== filters.brand) {
+        return;
+      }
+      if (filters.date !== 'all' && tr.date !== filters.date) {
+        return;
+      }
+      const p = (r.platform || '').toLowerCase();
+      if (p === 'shopee') shopeeCount++;
+      else if (p === 'tiktok') tiktokCount++;
+      else if (p === 'mirror') {
+        mirrorCount++;
+        shopeeCount++;
+        tiktokCount++;
+      }
+    });
+
+    return [
+      {
+        value: 'all',
+        label: 'Semua Platform',
+        subLabel: 'Shopee, TikTok & Mirror',
+      },
+      {
+        value: 'shopee',
+        label: 'Shopee',
+        subLabel: 'Shopee Live & Mirror',
+        count: shopeeCount,
+      },
+      {
+        value: 'tiktok',
+        label: 'TikTok',
+        subLabel: 'TikTok Live & Mirror',
+        count: tiktokCount,
+      },
+      {
+        value: 'mirror',
+        label: 'Mirror (Dual)',
+        subLabel: 'Shopee + TikTok Dual Live',
+        count: mirrorCount,
+      },
+    ];
+  }, [allTrackerRows, filters.brand, filters.date]);
+
+  // Host options for SearchableSelect
+  const hostOptions = useMemo<SearchableOption[]>(() => {
+    return [
+      { value: 'all', label: 'Semua Host' },
+      ...effectiveData.data.hosts.map((h) => ({
+        value: h.id,
+        label: h.display_name,
+      })),
+    ];
+  }, [effectiveData.data.hosts]);
+
+  const locationOptions: SearchableOption[] = [
+    { value: 'all', label: 'Semua Lokasi' },
+    { value: 'jakarta', label: 'Jakarta', subLabel: 'Studio Jakarta' },
+    { value: 'bandung', label: 'Bandung', subLabel: 'Studio Bandung' },
+  ];
+
+  const statusOptions: SearchableOption[] = [
+    { value: 'all', label: 'Semua Status' },
+    { value: 'BAU', label: 'BAU', subLabel: 'Business As Usual' },
+    { value: 'DOUBLE DATE', label: 'DOUBLE DATE', subLabel: 'Tanggal Kembar' },
+    { value: 'PAYDAY', label: 'PAYDAY', subLabel: 'Akhir Bulan' },
+  ];
+
+  const issueOptions: SearchableOption[] = [
+    { value: 'all', label: 'Semua Sesi' },
+    { value: 'with_issue', label: 'Ada Live Issue', subLabel: 'Restricted/Banned/Hold' },
+    { value: 'normal', label: 'Normal / Tanpa Issue', subLabel: 'Lancar' },
+  ];
+
   // Filter tracker rows by Brand, Location, Host, Status, Issue, and Search
   const filteredTrackerRows = useMemo<ComputedTrackerRow[]>(() => {
     const qSearch = filters.search.trim().toLowerCase();
@@ -275,6 +432,22 @@ export function SheetTrackerPage(
         const q = r.quotation;
         if (q?.brand_id !== filters.brand && q?.brand !== filters.brand && r.brandName !== filters.brand) {
           return false;
+        }
+      }
+      if (filters.date !== 'all' && tr.date !== filters.date) {
+        return false;
+      }
+      if (filters.platform !== 'all') {
+        const plat = (r.platform || '').toLowerCase();
+        const target = filters.platform.toLowerCase();
+        if (target === 'shopee') {
+          if (plat !== 'shopee' && plat !== 'mirror') return false;
+        } else if (target === 'tiktok') {
+          if (plat !== 'tiktok' && plat !== 'mirror') return false;
+        } else if (target === 'mirror') {
+          if (plat !== 'mirror') return false;
+        } else {
+          if (plat !== target) return false;
         }
       }
       if (filters.location !== 'all' && r.session.location_id !== filters.location) {
@@ -429,6 +602,8 @@ export function SheetTrackerPage(
       customStart: today(),
       customEnd: today(),
       brand: 'b_astra',
+      date: 'all',
+      platform: 'all',
       location: 'all',
       host: 'all',
       status: 'all',
@@ -656,100 +831,99 @@ export function SheetTrackerPage(
           )}
         </div>
 
-        {/* DETAILED PROPERTY FILTERS */}
+        {/* DETAILED PROPERTY FILTERS (SEARCHABLE DROPDOWNS: BRAND, DATE, PLATFORM, ETC) */}
         <div className="mgmt-filter-grid">
-          <label>
-            Brand (Output Tracker)
-            <select
-              value={filters.brand}
-              disabled={c.busy}
-              onChange={(e) => {
-                setFilters((prev) => ({ ...prev, brand: e.target.value }));
-                setPage(1);
-              }}
-            >
-              <option value="all">Semua Brand</option>
-              {uniqueBrands.map(([id, name]) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Brand (Output Tracker)"
+            value={filters.brand}
+            disabled={c.busy}
+            options={brandOptions}
+            searchPlaceholder="Cari brand (nama atau ID)..."
+            onChange={(val) => {
+              setFilters((prev) => ({ ...prev, brand: val, date: 'all' }));
+              setPage(1);
+            }}
+          />
 
-          <label>
-            Lokasi
-            <select
-              value={filters.location}
-              disabled={c.busy}
-              onChange={(e) => {
-                setFilters((prev) => ({ ...prev, location: e.target.value }));
-                setPage(1);
-              }}
-            >
-              <option value="all">Semua Lokasi</option>
-              <option value="jakarta">Jakarta</option>
-              <option value="bandung">Bandung</option>
-            </select>
-          </label>
+          <SearchableSelect
+            label="Tanggal Live (By Date)"
+            value={filters.date}
+            disabled={c.busy}
+            options={dateOptions}
+            searchPlaceholder="Cari tanggal (1-Oct, Kamis, dll)..."
+            onChange={(val) => {
+              setFilters((prev) => ({ ...prev, date: val }));
+              setPage(1);
+            }}
+          />
 
-          <label>
-            Host
-            <select
-              value={filters.host}
-              disabled={c.busy}
-              onChange={(e) => {
-                setFilters((prev) => ({ ...prev, host: e.target.value }));
-                setPage(1);
-              }}
-            >
-              <option value="all">Semua Host</option>
-              {effectiveData.data.hosts.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.display_name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Platform Live (By Platform)"
+            value={filters.platform}
+            disabled={c.busy}
+            options={platformOptions}
+            searchPlaceholder="Cari platform (Shopee, TikTok, Mirror)..."
+            onChange={(val) => {
+              setFilters((prev) => ({ ...prev, platform: val }));
+              setPage(1);
+            }}
+          />
 
-          <label>
-            Status Campaign
-            <select
-              value={filters.status}
-              disabled={c.busy}
-              onChange={(e) => {
-                setFilters((prev) => ({ ...prev, status: e.target.value }));
-                setPage(1);
-              }}
-            >
-              <option value="all">Semua Status</option>
-              <option value="BAU">BAU</option>
-              <option value="DOUBLE DATE">DOUBLE DATE</option>
-              <option value="PAYDAY">PAYDAY</option>
-            </select>
-          </label>
+          <SearchableSelect
+            label="Lokasi"
+            value={filters.location}
+            disabled={c.busy}
+            options={locationOptions}
+            searchPlaceholder="Cari lokasi studio..."
+            onChange={(val) => {
+              setFilters((prev) => ({ ...prev, location: val }));
+              setPage(1);
+            }}
+          />
 
-          <label>
-            Filter Live Issue
-            <select
-              value={filters.issueFilter}
-              disabled={c.busy}
-              onChange={(e) => {
-                setFilters((prev) => ({
-                  ...prev,
-                  issueFilter: e.target.value as TrackerFilterState['issueFilter'],
-                }));
-                setPage(1);
-              }}
-            >
-              <option value="all">Semua Sesi</option>
-              <option value="with_issue">Ada Live Issue (Restricted/Banned/Hold)</option>
-              <option value="normal">Normal / Tanpa Issue</option>
-            </select>
-          </label>
+          <SearchableSelect
+            label="Host"
+            value={filters.host}
+            disabled={c.busy}
+            options={hostOptions}
+            searchPlaceholder="Cari nama host..."
+            onChange={(val) => {
+              setFilters((prev) => ({ ...prev, host: val }));
+              setPage(1);
+            }}
+          />
+
+          <SearchableSelect
+            label="Status Campaign"
+            value={filters.status}
+            disabled={c.busy}
+            options={statusOptions}
+            searchPlaceholder="Cari status campaign..."
+            onChange={(val) => {
+              setFilters((prev) => ({ ...prev, status: val }));
+              setPage(1);
+            }}
+          />
+
+          <SearchableSelect
+            label="Filter Live Issue"
+            value={filters.issueFilter}
+            disabled={c.busy}
+            options={issueOptions}
+            searchPlaceholder="Cari status kendala..."
+            onChange={(val) => {
+              setFilters((prev) => ({
+                ...prev,
+                issueFilter: val as TrackerFilterState['issueFilter'],
+              }));
+              setPage(1);
+            }}
+          />
 
           <label className="search-col" style={{ gridColumn: 'span 2' }}>
-            Pencarian Cepat
+            <span className="field-label" style={{ fontSize: '0.72rem', fontWeight: 600, color: '#4f485d' }}>
+              Pencarian Cepat
+            </span>
             <input
               type="search"
               placeholder="Cari Live ID (11026_0911_STAST), Shop ID, Host, Studio, Issue, atau Background..."
@@ -763,10 +937,154 @@ export function SheetTrackerPage(
           </label>
         </div>
 
+        {/* ACTIVE FILTER CHIPS */}
+        {(filters.brand !== 'all' ||
+          filters.date !== 'all' ||
+          filters.platform !== 'all' ||
+          filters.location !== 'all' ||
+          filters.host !== 'all' ||
+          filters.status !== 'all' ||
+          filters.issueFilter !== 'all' ||
+          filters.search.trim()) && (
+          <div className="mgmt-active-filters-strip">
+            <span style={{ fontWeight: 600, color: '#55486a' }}>Filter Aktif:</span>
+            {filters.brand !== 'all' && (
+              <span className="mgmt-active-chip">
+                Brand: {activeBrandLabel}
+                <button
+                  type="button"
+                  title="Hapus filter Brand"
+                  onClick={() => {
+                    setFilters((p) => ({ ...p, brand: 'all', date: 'all' }));
+                    setPage(1);
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filters.date !== 'all' && (
+              <span className="mgmt-active-chip">
+                Tanggal: {dateOptions.find((d) => d.value === filters.date)?.label || filters.date}
+                <button
+                  type="button"
+                  title="Hapus filter Tanggal"
+                  onClick={() => {
+                    setFilters((p) => ({ ...p, date: 'all' }));
+                    setPage(1);
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filters.platform !== 'all' && (
+              <span className="mgmt-active-chip">
+                Platform: {filters.platform.toUpperCase()}
+                <button
+                  type="button"
+                  title="Hapus filter Platform"
+                  onClick={() => {
+                    setFilters((p) => ({ ...p, platform: 'all' }));
+                    setPage(1);
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filters.location !== 'all' && (
+              <span className="mgmt-active-chip">
+                Lokasi: {filters.location.toUpperCase()}
+                <button
+                  type="button"
+                  title="Hapus filter Lokasi"
+                  onClick={() => {
+                    setFilters((p) => ({ ...p, location: 'all' }));
+                    setPage(1);
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filters.host !== 'all' && (
+              <span className="mgmt-active-chip">
+                Host: {effectiveData.data.hosts.find((h) => h.id === filters.host)?.display_name || filters.host}
+                <button
+                  type="button"
+                  title="Hapus filter Host"
+                  onClick={() => {
+                    setFilters((p) => ({ ...p, host: 'all' }));
+                    setPage(1);
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filters.status !== 'all' && (
+              <span className="mgmt-active-chip">
+                Status: {filters.status}
+                <button
+                  type="button"
+                  title="Hapus filter Status"
+                  onClick={() => {
+                    setFilters((p) => ({ ...p, status: 'all' }));
+                    setPage(1);
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filters.issueFilter !== 'all' && (
+              <span className="mgmt-active-chip">
+                Issue: {filters.issueFilter === 'with_issue' ? 'Ada Kendala' : 'Normal'}
+                <button
+                  type="button"
+                  title="Hapus filter Issue"
+                  onClick={() => {
+                    setFilters((p) => ({ ...p, issueFilter: 'all' }));
+                    setPage(1);
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filters.search.trim() && (
+              <span className="mgmt-active-chip">
+                Cari: &ldquo;{filters.search}&rdquo;
+                <button
+                  type="button"
+                  title="Hapus Pencarian"
+                  onClick={() => {
+                    setFilters((p) => ({ ...p, search: '' }));
+                    setPage(1);
+                  }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            <button
+              type="button"
+              className="btn-link"
+              style={{ fontSize: '0.72rem', color: '#6c32b9', fontWeight: 600, marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer' }}
+              onClick={handleResetFilters}
+            >
+              Reset Semua Filter
+            </button>
+          </div>
+        )}
+
         <div className="mgmt-filter-foot">
           <span className="muted">
             Menampilkan <strong>{filteredTrackerRows.length}</strong> sesi untuk Brand{' '}
             <strong>{activeBrandLabel}</strong>
+            {filters.date !== 'all' && ` · Tanggal ${dateOptions.find((d) => d.value === filters.date)?.label || filters.date}`}
+            {filters.platform !== 'all' && ` · Platform ${filters.platform.toUpperCase()}`}
           </span>
           <button type="button" onClick={handleResetFilters} disabled={c.busy}>
             Reset ke Brand ASTRA

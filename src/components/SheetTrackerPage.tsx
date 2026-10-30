@@ -1094,38 +1094,19 @@ export function SheetTrackerPage(
 
       {/* SHEET TRACKER TABLE SECTION (PERSIS INPUT.XLSX BERDASARKAN BRAND) */}
       <section className="card schedule-table-card">
-        {/* Brand Selector Pills & View Mode Bar */}
-        <div className="tracker-brand-bar">
+        {/* View Mode Bar */}
+        <div className="tracker-brand-bar" style={{ justifyContent: 'flex-start' }}>
           <div className="tracker-brand-pills">
-            <strong style={{ fontSize: '0.78rem', color: '#241c30', marginRight: 4 }}>
-              Pilih Brand Output:
-            </strong>
-            {uniqueBrands.map(([id, name]) => (
-              <button
-                key={id}
-                type="button"
-                className={filters.brand === id || filters.brand === name ? 'selected' : ''}
-                onClick={() => {
-                  setFilters((prev) => ({ ...prev, brand: id }));
-                  setPage(1);
-                }}
-              >
-                {name}
-              </button>
-            ))}
+            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#4f485d', marginRight: 6 }}>
+              Tampilan Lembar:
+            </span>
             <button
               type="button"
-              className={filters.brand === 'all' ? 'selected' : ''}
-              onClick={() => {
-                setFilters((prev) => ({ ...prev, brand: 'all' }));
-                setPage(1);
-              }}
+              className={trackerView === 'full_sheet' ? 'selected' : ''}
+              onClick={() => setTrackerView('full_sheet')}
             >
-              Semua Brand
+              Full Sheet (Persis input.xlsx)
             </button>
-          </div>
-
-          <div className="tracker-brand-pills">
             <button
               type="button"
               className={trackerView === 'shopee' ? 'selected' : ''}
@@ -1146,13 +1127,6 @@ export function SheetTrackerPage(
               onClick={() => setTrackerView('daily')}
             >
               Daily Comparison (28 Kolom)
-            </button>
-            <button
-              type="button"
-              className={trackerView === 'full_sheet' ? 'selected' : ''}
-              onClick={() => setTrackerView('full_sheet')}
-            >
-              Full Sheet (Persis input.xlsx)
             </button>
           </div>
         </div>
